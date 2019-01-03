@@ -1,0 +1,12 @@
+# R
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Python
+venv/
+.idea/
+
+# KDE directory preferences
+.directory
