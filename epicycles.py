@@ -7,6 +7,7 @@ License: MIT (see file LICENSE for details)
 # - Use complex numbers.
 # - When drawing very small circles either draw them with radius=1 or don't draw them.
 # - Calculate the parameters of the circles for a path using fourier analysis.
+# - Read in images?
 # - Use command line arguments.
 
 
@@ -72,6 +73,11 @@ class Circle:
             pg.draw.line(line_surface, LINE_COLOR, self.last_point,
                          foo_int)
 
+
+# circles = [
+#     Circle(300, 0, 1),
+#     Circle(300/2, 0, 2, clockwise = False)
+# ]
 
 # square:
 circles = [
