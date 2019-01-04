@@ -94,12 +94,13 @@ construct <- function(v, n, m) {
     foo <- fft(p, inverse = TRUE) / length(p)
 
     indices <- integer(n)
-    indices[seq(1, n, 2)] <- 1:ceiling(n / 2)
-    indices[seq(2, n, 2)] <- seq(length(foo), length(foo) - floor(n / 2) + 1)
-    indices
+    a <- 1:ceiling(n/2)
+    b <- seq(length(foo), by = -1, length.out = n - length(a))
+    indices[c(TRUE, FALSE)] <- a
+    indices[c(FALSE, TRUE)] <- b
 
     bla <- rep(1:n, each = 2, length.out = n - 1)
-    bla <- bla * rep(c(1, -1), length.out = n - 1)
+    bla[c(FALSE, TRUE)] <- bla[c(FALSE, TRUE)] * -1
     bla <- c(0, bla)
 
     x <- seq(0, 2 * pi, length.out = m)
@@ -114,6 +115,6 @@ construct <- function(v, n, m) {
 s <- construct(p, 5, 100)
 plot(s, pch = 20, asp = 1)
 
-s <- construct(p, 10, 100)
+s <- construct(p, 11, 100)
 plot(p, asp = 1)
 lines(s)
