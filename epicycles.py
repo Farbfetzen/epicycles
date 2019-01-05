@@ -2,17 +2,9 @@
 License: MIT (see file LICENSE for details)
 """
 
-# TODO:
-# - Make radius a float to allow for very small circles.
-# - Use complex numbers.
-# - When drawing very small circles either draw them with radius=1 or don't draw them.
-# - Calculate the parameters of the circles for a path using fourier analysis.
-# - Read in images?
-# - Use command line arguments.
-
 
 import os
-from math import pi, sin, cos
+import math
 
 import pygame as pg
 
@@ -20,93 +12,63 @@ import pygame as pg
 os.environ["SDL_VIDEO_CENTERED"] = "1"
 pg.init()
 
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 1000
+SCREEN_WIDTH = 900
+SCREEN_HEIGHT = 900
+SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+SCREEN_CENTER_COMPLEX = SCREEN_CENTER[0] + SCREEN_CENTER[1] * 1j
 FPS = 60
-LINE_COLOR = (255, 255, 255)
-CIRCLE_COLOR = (200, 200, 200, 75)
-DRAW_POINT_RADIUS = 3
-
-
-class Circle:
-    def __init__(self, radius, angle, speed,
-                 parent=None, clockwise=True, draw_line=False):
-        # TODO: Find better name for variable foo. That is the point on a
-        #    circle where either the center of the child circle is attached
-        #    or where the point for drawing the line is.
-
-        self.radius = int(round(radius))  # pixel
-        self.angle = angle  # radians
-        self.speed = speed  # radians per second
-        self.parent = parent
-        self.direction = -1 if clockwise else 1
-        self.draw_line = draw_line
-        self.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-        self.foo = [0, 0]
-        self.last_point = self.foo
-        if parent is not None:
-            self.set_parent(parent)
-        self.update(0)  # initialize self.foo and self.last_point
-
-    def set_parent(self, parent):
-        self.parent = parent
-        self.center = self.parent.foo
-        self.update(0)
-
-    def update(self, dt):
-        if self.parent is not None:
-            self.center = self.parent.foo
-        self.angle += self.speed * dt * self.direction
-        if self.angle > pi * 2:
-            self.angle -= pi * 2
-        self.last_point = [int(p) for p in self.foo]
-        self.foo = [self.center[0] + cos(self.angle) * self.radius,
-                    self.center[1] - sin(self.angle) * self.radius]
-
-    def draw(self):
-        foo_int = [int(p) for p in self.foo]
-        center_int = [int(p) for p in self.center]
-        pg.draw.circle(circle_surface, CIRCLE_COLOR, center_int,
-                       self.radius, 1)
-        pg.draw.line(circle_surface, CIRCLE_COLOR, center_int, foo_int)
-        if self.draw_line:
-            pg.draw.line(line_surface, LINE_COLOR, self.last_point,
-                         foo_int)
-
-
-# circles = [
-#     Circle(300, 0, 1),
-#     Circle(300/2, 0, 2, clockwise = False)
-# ]
-
-# square:
-circles = [
-    Circle(300, pi/4, 1),
-    Circle(300/3**2, pi/4, 3, clockwise=False),
-    Circle(300/5**2, pi/4, 5),
-    Circle(300/7**2, pi/4, 7, clockwise=False),
-]
-
-# triangle:
-# circles = [
-#     Circle(300, 0, 1),
-#     Circle(300/4, pi, 2, clockwise=False),
-#     Circle(300/16, 0, 4)
-# ]
-
-for i in range(1, len(circles)):
-    circles[i].set_parent(circles[i-1])
-
-circles[-1].draw_line = True
-paused = False
-circles_visible = True
+BACKGROUND_COLOR = (255, 255, 255)
+BACKGROUND_COLOR_TRANSP = (255, 255, 255, 0)
+LINE_COLOR = (0, 0, 0)
+CIRCLE_COLOR = (180, 180, 255)
+SPEED = 1  # speed of the innermost circle in radians/second
+CENTER_CIRCLE_RADIUS = 300
 
 main_surface = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 line_surface = main_surface.copy()
 circle_surface = main_surface.convert_alpha()
+line_surface.fill(BACKGROUND_COLOR)
 clock = pg.time.Clock()
-
+paused = False
+circles_visible = True
 running = True
+t = 0
+
+# This is the formula:
+# a * exp(bj * t) + c
+# a is the start position
+# abs(a) is the circle radius
+# b is the speed and direction of the rotation (negative values rotate anticlockwise)
+# c is the position of the circle center
+
+ab = (
+    [0.1+0j, 1j],
+    [0.5+0j, -2.5j],
+    [0.1+0j, 1j]
+)
+# ab = (
+#     [1, 1j],
+#     [1/9, -3j],
+#     [1/25, 5j],
+#     [1/49, -7j]
+# )
+for k in ab:
+    k[0] *= CENTER_CIRCLE_RADIUS
+c = [0 for i in range(len(ab)+1)]
+c_complex = c.copy()
+c[0] = SCREEN_CENTER
+c_complex[0] = SCREEN_CENTER_COMPLEX
+
+# Get the first point:
+for i, k in enumerate(ab):
+    p = k[0] * math.e ** (k[1] * t) + c_complex[i]
+    c_complex[i+1] = p
+    c[i+1] = [p.real, p.imag]
+last_point = c[-1]
+# Prevent a pixel artifact that sometimes appears:
+last_point[0] -= 0.001
+last_point[1] -= 0.001
+
 while running:
     dt = clock.tick(FPS) / 1000  # seconds
 
@@ -120,12 +82,43 @@ while running:
                 paused = not paused
             elif event.key == pg.K_c:
                 circles_visible = not circles_visible
+            elif event.key == pg.K_RETURN:
+                print(t)
+                print(c1)
 
     if not paused:
-        circle_surface.fill((0, 0, 0, 0))
-        for c in circles:
-            c.update(dt)
-            c.draw()
+        circle_surface.fill(BACKGROUND_COLOR_TRANSP)
+
+        t += SPEED * dt
+        # if t > math.pi * 2:
+        #     t -= math.pi * 2
+
+        for i, k in enumerate(ab):
+            p = k[0] * math.e ** (k[1] * t) + c_complex[i]
+            c_complex[i+1] = p
+            c[i+1] = (p.real, p.imag)
+            pg.draw.circle(
+                circle_surface,
+                CIRCLE_COLOR,
+                [int(f) for f in c[i]],
+                int(abs(k[0])),
+                1
+            )
+            pg.draw.line(
+                circle_surface,
+                CIRCLE_COLOR,
+                c[i],
+                c[i+1]
+            )
+
+        pg.draw.line(
+            line_surface,
+            LINE_COLOR,
+            last_point,
+            c[-1],
+            2
+        )
+        last_point = c[-1]
 
     main_surface.blit(line_surface, (0, 0))
     if circles_visible:
