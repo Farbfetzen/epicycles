@@ -15,19 +15,21 @@ os.environ["SDL_VIDEO_CENTERED"] = "1"
 pg.init()
 
 DISCO_MODE = False
-SCREEN_WIDTH = 900
-SCREEN_HEIGHT = 900
+SAVE_IMAGES = False
+SCREEN_WIDTH = 600
+SCREEN_HEIGHT = 600
 SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 SCREEN_CENTER_COMPLEX = SCREEN_CENTER[0] + SCREEN_CENTER[1] * 1j
-FPS = 60
+FPS = 25 if SAVE_IMAGES else 60
 BACKGROUND_COLOR = (20, 20, 20)
 BACKGROUND_COLOR_TRANSP = (0, 0, 0, 0)
-LINE_COLOR = [200, 200, 200]
-CIRCLE_COLOR = (100, 100, 100, 128)
-CIRCLE_LINE_COLOR = (255, 50, 50, 128)
-CENTER_CIRCLE_RADIUS = 300
+LINE_COLOR = [255, 125, 0]
+CIRCLE_COLOR = (180, 180, 180, 128)
+CIRCLE_LINE_COLOR = (255, 50, 50, 180)
+CENTER_CIRCLE_RADIUS = 150
 
 main_surface = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pg.display.set_caption("Epicycles")
 line_surface = main_surface.copy()
 circle_surface = main_surface.convert_alpha()
 line_surface.fill(BACKGROUND_COLOR)
@@ -40,23 +42,24 @@ t = 0
 
 # This is the formula:
 # a * exp(bj * t) + c
-# a is the start position
-# abs(a) is the circle radius
+# a is the start position, abs(a) is the circle radius
 # b is the speed and direction of the rotation (negative values rotate anticlockwise)
 # j is sqrt(-1), usually denoted "i"
 # c is the position of the circle center
 
-ab = (
-    [0.1+0j, 1j],
-    [0.5+0j, -1j],
-    [0.1+0j, 2j]
-)
 # ab = (
 #     [1, 1j],
 #     [1/9, -3j],
 #     [1/25, 5j],
 #     [1/49, -7j]
 # )
+
+ab = (
+    [1, 1j],
+    [1/3, 3j],
+    [1/5, 5j],
+    [1/7, 7j]
+)
 
 def new_random():
     n = random.randint(2, 20)
@@ -82,9 +85,11 @@ c_complex = c.copy()
 c[0] = SCREEN_CENTER
 c_complex[0] = SCREEN_CENTER_COMPLEX
 last_point = None
+image_number = 1
 
 while running:
     dt = clock.tick(FPS) / 1000  # seconds
+    pg.display.set_caption("Epicycles - " + str(int(clock.get_fps())))
 
     for event in pg.event.get():
         if event.type == pg.QUIT:
@@ -122,6 +127,8 @@ while running:
             # That means the shape must be finished after one revolution of
             # the innermost circle. This is alway the case if the circle
             # speed follor the pattern 1, -1, 2, -2, 3, -3, ...
+            if SAVE_IMAGES:
+                running = False
 
         for i, k in enumerate(ab):
             p = k[0] * math.e ** (k[1] * t) + c_complex[i]
@@ -164,3 +171,18 @@ while running:
     if circles_visible:
         main_surface.blit(circle_surface, (0, 0))
     pg.display.update()
+
+    pressed = pg.key.get_pressed()
+    if pressed[pg.K_s] or SAVE_IMAGES:
+        pg.image.save(
+            main_surface,
+            "screenshots/" + str(image_number).zfill(5) + ".png"
+        )
+        image_number += 1
+        # How to make an animated gif with gimp because I don't
+        # understand how to make small gifs with imagemagick:
+        # Load all images in gimp with file > open as layers
+        # image > mode > indexed: 255 colors
+        # filters > animation > optimize for gif
+        # file > export as: "filename.gif", delay = 1000/fps,
+        # no gif comment, use delay for all frames
