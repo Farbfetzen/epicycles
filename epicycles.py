@@ -43,6 +43,7 @@ t = 0
 # a is the start position
 # abs(a) is the circle radius
 # b is the speed and direction of the rotation (negative values rotate anticlockwise)
+# j is sqrt(-1), usually denoted "i"
 # c is the position of the circle center
 
 ab = (
