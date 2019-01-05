@@ -89,7 +89,6 @@ image_number = 1
 
 while running:
     dt = clock.tick(FPS) / 1000  # seconds
-    pg.display.set_caption("Epicycles - " + str(int(clock.get_fps())))
 
     for event in pg.event.get():
         if event.type == pg.QUIT:
