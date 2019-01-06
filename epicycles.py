@@ -58,7 +58,20 @@ ab = (
     [1, 1j],
     [1/3, 3j],
     [1/5, 5j],
-    [1/7, 7j]
+    [1/7, 7j],
+    [1/9, 9j],
+    [1/11, 11j],
+    [1/13, 13j]
+)
+
+ab = (
+    [1, 1j],
+    [1/3, -3j],
+    [1/5, 5j],
+    [1/7, -7j],
+    [1/9, 9j],
+    [1/11, -11j],
+    [1/13, 13j]
 )
 
 def new_random():
@@ -180,8 +193,14 @@ while running:
         image_number += 1
         # How to make an animated gif with gimp because I don't
         # understand how to make small gifs with imagemagick:
-        # Load all images in gimp with file > open as layers
-        # image > mode > indexed: 255 colors
-        # filters > animation > optimize for gif
-        # file > export as: "filename.gif", delay = 1000/fps,
-        # no gif comment, use delay for all frames
+        # 1. load all images in gimp with file > open as layers
+        # 2. image > mode > indexed: 255 colors
+        # 3. filters > animation > optimize for gif
+        # 4. file > export as: "filename.gif", delay = 1000/fps,
+        #    no gif comment, use delay for all frames
+        #
+        # Alternatively there is this way with imagemagick:
+        # cd screenshots
+        # convert -delay 4 -loop 0 -layers optimize *.png animation.gif
+        # The "4" after "-delay" is 100/fps.
+        # But the filesize is still larger than with gimp and I don't know why.
