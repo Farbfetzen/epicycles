@@ -2,6 +2,10 @@
 License: MIT (see file LICENSE for details)
 """
 
+# TODO: Switch the order of the surfaces. Draw the circles behind the line.
+#       This includes making the circle surface opaque and the line surface
+#       transparent.
+
 
 import os
 import math
@@ -16,17 +20,17 @@ pg.init()
 
 DISCO_MODE = False
 SAVE_IMAGES = False
-SCREEN_WIDTH = 600
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 900  # 600 or less for gifs and videos
+SCREEN_HEIGHT = 900
 SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 SCREEN_CENTER_COMPLEX = SCREEN_CENTER[0] + SCREEN_CENTER[1] * 1j
 FPS = 25 if SAVE_IMAGES else 60
 BACKGROUND_COLOR = (20, 20, 20)
 BACKGROUND_COLOR_TRANSP = (0, 0, 0, 0)
 LINE_COLOR = [255, 125, 0]
-CIRCLE_COLOR = (180, 180, 180, 128)
-CIRCLE_LINE_COLOR = (255, 50, 50, 180)
-CENTER_CIRCLE_RADIUS = 150
+CIRCLE_COLOR = (100, 100, 100)
+CIRCLE_LINE_COLOR = (200, 50, 50)
+CENTER_CIRCLE_RADIUS = 200  # 150 for gifs and videos
 
 main_surface = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pg.display.set_caption("Epicycles")
@@ -59,20 +63,18 @@ ab = (
     [1/3, 3j],
     [1/5, 5j],
     [1/7, 7j],
-    [1/9, 9j],
-    [1/11, 11j],
-    [1/13, 13j]
+    [1/9, 9j]
 )
 
-ab = (
-    [1, 1j],
-    [1/3, -3j],
-    [1/5, 5j],
-    [1/7, -7j],
-    [1/9, 9j],
-    [1/11, -11j],
-    [1/13, 13j]
-)
+# ab = (
+#     [1, 1j],
+#     [1/3, -3j],
+#     [1/5, 5j],
+#     [1/7, -7j],
+#     [1/9, 9j],
+#     [1/11, -11j],
+#     [1/13, 13j]
+# )
 
 def new_random():
     n = random.randint(2, 20)
@@ -198,9 +200,15 @@ while running:
         # 3. filters > animation > optimize for gif
         # 4. file > export as: "filename.gif", delay = 1000/fps,
         #    no gif comment, use delay for all frames
+        # Experiment with maybe removing the first frames for a better loop.
         #
         # Alternatively there is this way with imagemagick:
         # cd screenshots
         # convert -delay 4 -loop 0 -layers optimize *.png animation.gif
         # The "4" after "-delay" is 100/fps.
         # But the filesize is still larger than with gimp and I don't know why.
+        #
+        # Either way the file size can be further reduced by converting the
+        # animated gif to a mp4 or webm using ffmpeg.
+        # Example taken from https://unix.stackexchange.com/a/294892
+        # ffmpeg -i animated.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" video.mp4

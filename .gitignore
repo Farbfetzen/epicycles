@@ -1,4 +1,6 @@
 /screenshots
+*.mp4
+*.webm
 
 # R
 .Rproj.user
