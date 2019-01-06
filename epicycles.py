@@ -20,17 +20,17 @@ pg.init()
 
 DISCO_MODE = False
 SAVE_IMAGES = False
-SCREEN_WIDTH = 900  # 600 or less for gifs and videos
-SCREEN_HEIGHT = 900
+SCREEN_WIDTH = 600  # 600 or less for gifs and videos
+SCREEN_HEIGHT = 600
 SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 SCREEN_CENTER_COMPLEX = SCREEN_CENTER[0] + SCREEN_CENTER[1] * 1j
 FPS = 25 if SAVE_IMAGES else 60
-BACKGROUND_COLOR = (20, 20, 20)
-BACKGROUND_COLOR_TRANSP = (0, 0, 0, 0)
-LINE_COLOR = [255, 125, 0]
-CIRCLE_COLOR = (100, 100, 100)
-CIRCLE_LINE_COLOR = (200, 50, 50)
-CENTER_CIRCLE_RADIUS = 200  # 150 for gifs and videos
+BACKGROUND_COLOR = (255, 255, 255)
+BACKGROUND_COLOR_TRANSP = (255, 255, 255, 0)
+LINE_COLOR = [0, 0, 0]
+CIRCLE_COLOR = (128, 128, 128)
+CIRCLE_LINE_COLOR = (255, 0, 0)
+CENTER_CIRCLE_RADIUS = 150  # 150 for gifs and videos
 
 main_surface = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pg.display.set_caption("Epicycles")
@@ -57,14 +57,13 @@ t = 0
 #     [1/25, 5j],
 #     [1/49, -7j]
 # )
-
-ab = (
-    [1, 1j],
-    [1/3, 3j],
-    [1/5, 5j],
-    [1/7, 7j],
-    [1/9, 9j]
-)
+# ab = (
+#     [1, 1j],
+#     [1/3, 3j],
+#     [1/5, 5j],
+#     [1/7, 7j],
+#     [1/9, 9j]
+# )
 
 # H:
 ab = (
@@ -88,6 +87,16 @@ ab = (
     [-0.0272298-0.0407523j, -9j],
     [0+0j, 10j],
     [0+0j, -10j],
+    [0.0131012+0.002606j, 11j],
+    [-0.0221539+0.0044067j, -11j],
+    [0+0j, 12j],
+    [0+0j, -12j],
+    [-0.0033266-0.0167242j, 13j],
+    [0.0041882-0.0210553j, -13j],
+    [0+0j, 14j],
+    [0+0j, -14j],
+    [-3.879e-04+2.592e-04j, 15j],
+    [-0.0052569-0.0035126j, -15j],
 )
 
 def new_random():
