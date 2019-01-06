@@ -1,3 +1,6 @@
+# Sebastian Henz (2019)
+# License: MIT (see file LICENSE for details)
+
 # First find the corners and then interpolate.
 
 p_str <- "
@@ -43,20 +46,23 @@ plot(result, type = "o", asp = 1)
 transformed <- fft(result, inverse = TRUE) / length(result)
 transformed
 
-foo <- construct(result, 15, 1000)  # from the other script
+foo <- construct(result, 300, 1000)  # from the other script
 plot(foo$p, asp = 1)
 foo$values
 
-# Interessant: Alle a bei geraden b sind null.
 
 bla <- foo$values
 bla$a <- sub("i", "j", as.character(bla$a), fixed = TRUE)
 bla$a <- paste0("[", bla$a)
 bla$b <- paste0(bla$b, "j],")
 bla <- bla[-1, ]
-bla[nrow(bla), 2] <- sub(",", "", bla[nrow(bla), 2], fixed = TRUE)
+
+# Interessant: Alle a bei geraden b sind null. Heißt ich kann sie rauswerfen:
+bla <- bla[c(T, T, F, F), ]  # ATTENTION! REMEMBER THIS!
 bla
-write.table(bla, "H_circles.csv", row.names = FALSE, col.names = FALSE,
+
+bla[nrow(bla), 2] <- sub(",", "", bla[nrow(bla), 2], fixed = TRUE)
+write.table(bla, "closed_Hilbert_circles.csv", row.names = FALSE, col.names = FALSE,
             quote = FALSE, sep = ", ")
 # Now open the file and copy everything into the python script.
 # TODO: Write the python script so that it can load from that file.
