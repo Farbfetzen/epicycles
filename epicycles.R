@@ -85,13 +85,14 @@ q <- q1 + q2 + q3 + q4 + q5
 plot(q, pch = 20, asp = 1)
 
 
-construct <- function(v, n, m) {
+construct <- function(v, n, m, d = 7) {
     # v: vector of points to be approximated
     # n: number of circles
     # m: number of points to return
+    # d: number of digits to round the result to
     # Returns the complex coordinates of the shape.
 
-    foo <- fft(p, inverse = TRUE) / length(p)
+    foo <- fft(v, inverse = TRUE) / length(v)
 
     indices <- integer(n)
     a <- 1:ceiling(n/2)
@@ -103,13 +104,14 @@ construct <- function(v, n, m) {
     bla[c(FALSE, TRUE)] <- bla[c(FALSE, TRUE)] * -1
     bla <- c(0, bla)
 
-    x <- seq(0, 2 * pi, length.out = m)
+    values <- data.frame(a = round(foo[indices], d), b = bla)
 
-    p <- complex(length(t))
+    x <- seq(0, 2 * pi, length.out = m)
+    p <- complex(length(x))
     for (j in 1:n) {
         p <- p + foo[indices[j]] * exp(bla[j] * 1i * x)
     }
-    p
+    list(p=p, values = values)
 }
 
 s <- construct(p, 5, 100)
