@@ -52,15 +52,15 @@ foo$values
 
 
 bla <- foo$values
+
+# Interessant: Alle a bei geraden b sind null. Heißt ich kann sie rauswerfen:
+bla <- bla[c(T, T, F, F), ]  # TODO: Automate this! If the radius after rounding is 0 then delete the row.
+bla
+
 bla$a <- sub("i", "j", as.character(bla$a), fixed = TRUE)
 bla$a <- paste0("[", bla$a)
 bla$b <- paste0(bla$b, "j],")
 bla <- bla[-1, ]
-
-# Interessant: Alle a bei geraden b sind null. Heißt ich kann sie rauswerfen:
-bla <- bla[c(T, T, F, F), ]  # ATTENTION! REMEMBER THIS!
-bla
-
 bla[nrow(bla), 2] <- sub(",", "", bla[nrow(bla), 2], fixed = TRUE)
 write.table(bla, "closed_Hilbert_circles.csv", row.names = FALSE, col.names = FALSE,
             quote = FALSE, sep = ", ")
