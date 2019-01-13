@@ -11,6 +11,7 @@ screenshots/
 
 # Python
 venv/
+__pycache__/
 
 # KDE directory preferences
 .directory
