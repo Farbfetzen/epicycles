@@ -1,6 +1,7 @@
-/screenshots
+screenshots/
 *.mp4
 *.webm
+.vscode/
 
 # R
 .Rproj.user
@@ -10,7 +11,6 @@
 
 # Python
 venv/
-.idea/
 
 # KDE directory preferences
 .directory
