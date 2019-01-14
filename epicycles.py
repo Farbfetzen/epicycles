@@ -34,7 +34,7 @@ BACKGROUND_COLOR = (255, 255, 255)
 LINE_COLOR = [0, 0, 0]
 CIRCLE_COLOR = (128, 128, 128)
 CIRCLE_LINE_COLOR = (255, 0, 0)
-CENTER_CIRCLE_RADIUS = 200  # Adjust manually for different shapes
+CENTER_CIRCLE_RADIUS = 400  # Adjust manually for different shapes
 MIN_SPEED = 1/16
 EXAMPLE_DIAMOND = [
     [1, 1j],
@@ -49,7 +49,12 @@ EXAMPLE_SQUARE_WAVE = [
     [1/7, 7j],
     [1/9, 9j]
 ]
-
+EXAMPLE_STAR = [
+    [0.5447818+0.1770103j, 2j],
+    [0.2421415+0.0786765j, -3j],
+    [0.0444989+0.0144586j, 7j],
+    [0.0340763+0.0110721j, -8j]
+]
 
 class Epicycles:
     def __init__(self, harmonics):
@@ -141,8 +146,8 @@ class Epicycles:
             if SAVE_IMAGES:
                 self.running = False
 
-        for i, k in enumerate(self.harmonics):
-            p = k[0] * math.e ** (k[1] * self.t) + self.circle_points_complex[i]
+        for i, h in enumerate(self.harmonics):
+            p = h[0] * math.e ** (h[1] * self.t) + self.circle_points_complex[i]
             self.circle_points_complex[i+1] = p
             self.circle_points[i+1] = self.from_complex(p)
 
@@ -206,7 +211,7 @@ class Epicycles:
 if __name__ == "__main__":
     os.environ["SDL_VIDEO_CENTERED"] = "1"
     pg.init()
-    e = Epicycles(EXAMPLE_SQUARE_WAVE)
+    e = Epicycles(EXAMPLE_STAR)
     e.run()
 
 

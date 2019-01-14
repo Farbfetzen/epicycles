@@ -43,17 +43,14 @@ result <- result - (max(Re(result)) / 2 + (max(Im(result)) / 2) * 1i)
 par(mar = c(4, 4, 0, 0)+0.1)
 plot(result, type = "o", asp = 1)
 
-transformed <- fft(result, inverse = TRUE) / length(result)
-transformed
-
 foo <- construct(result, 100, 1000)  # from the other script
 plot(foo$p, asp = 1)
 foo$values
 
-
 bla <- foo$values
 
 # remove all circles with zero radius:
+bla
 bla <- bla[abs(bla$a) > 0, ]
 bla
 
@@ -62,7 +59,7 @@ bla$a <- paste0("[", bla$a)
 bla$b <- paste0(bla$b, "j],")
 bla <- bla[-1, ]
 bla[nrow(bla), 2] <- sub(",", "", bla[nrow(bla), 2], fixed = TRUE)
-write.table(bla, "triangle_curve.txt", row.names = FALSE, col.names = FALSE,
+write.table(bla, "star_circles.txt", row.names = FALSE, col.names = FALSE,
             quote = FALSE, sep = ", ")
 # Now open the file and copy everything into the python script.
 # TODO: Write the python script so that it can load from that file.
