@@ -46,15 +46,15 @@ plot(result, type = "o", asp = 1)
 transformed <- fft(result, inverse = TRUE) / length(result)
 transformed
 
-foo <- construct(result, 300, 1000)  # from the other script
+foo <- construct(result, 100, 1000)  # from the other script
 plot(foo$p, asp = 1)
 foo$values
 
 
 bla <- foo$values
 
-# Interessant: Alle a bei geraden b sind null. Heißt ich kann sie rauswerfen:
-bla <- bla[c(T, T, F, F), ]  # TODO: Automate this! If the radius after rounding is 0 then delete the row.
+# remove all circles with zero radius:
+bla <- bla[abs(bla$a) > 0, ]
 bla
 
 bla$a <- sub("i", "j", as.character(bla$a), fixed = TRUE)
@@ -62,7 +62,7 @@ bla$a <- paste0("[", bla$a)
 bla$b <- paste0(bla$b, "j],")
 bla <- bla[-1, ]
 bla[nrow(bla), 2] <- sub(",", "", bla[nrow(bla), 2], fixed = TRUE)
-write.table(bla, "closed_Hilbert_circles.csv", row.names = FALSE, col.names = FALSE,
+write.table(bla, "triangle_curve.txt", row.names = FALSE, col.names = FALSE,
             quote = FALSE, sep = ", ")
 # Now open the file and copy everything into the python script.
 # TODO: Write the python script so that it can load from that file.
