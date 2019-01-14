@@ -54,6 +54,10 @@ EXAMPLE_SQUARE_WAVE = [
 class Epicycles:
     def __init__(self, harmonics):
         self.harmonics = harmonics
+        for i, h in enumerate(self.harmonics):
+            # Invert y-axis for pygame window.
+            z = h[0]
+            self.harmonics[i][0] = complex(z.real, z.imag * -1)
         self.running = True
         self.image_number = 0
         self.last_point = None
@@ -75,7 +79,7 @@ class Epicycles:
 
     @staticmethod
     def to_complex(xy):
-        return xy[0] + xy[1] * 1j
+        return complex(xy[0], xy[1])
 
     @staticmethod
     def from_complex(z):
@@ -87,13 +91,13 @@ class Epicycles:
         n = random.randint(2, 20)
         self.harmonics = []
         for i in range(n):
-            a = (random.uniform(-1, 1) + random.uniform(-1, 1)*1j) / n
+            a = complex(random.uniform(-1, 1), random.uniform(-1, 1)) / n
             a *= CENTER_CIRCLE_RADIUS
             if (i + 1) % 2 == 1:
                 b = math.ceil((i + 1) / 2)
             else:
                 b = (i + 1) // -2
-            b = b * 1j
+            b = complex(0, b)
             self.harmonics.append([a, b])
         print("\n")
         pprint(self.harmonics)
