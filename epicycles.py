@@ -191,6 +191,9 @@ class Epicycles:
         dt = 0
         clock = pg.time.Clock()
 
+        # foo = [None] * 1000
+        # bar = 0
+
         while self.running:
             dt = clock.tick(FPS) / 1000  # seconds
             self.handle_input()
@@ -207,6 +210,17 @@ class Epicycles:
                     "screenshots/" + str(self.image_number).zfill(5) + ".png"
                 )
 
+
+        #     foo[bar] = self.main_surface.copy()
+        #     bar += 1
+        # baz = [f for f in foo if f is not None]
+        # print(f"Saving {len(baz)} screenshots...", end = "")
+        # for i, b in enumerate(baz):
+        #     pg.image.save(
+        #         b,
+        #         "./screenshots/" + str(i).zfill(5) + ".png"
+        #     )
+        # print(" done.")
 
 if __name__ == "__main__":
     os.environ["SDL_VIDEO_CENTERED"] = "1"
