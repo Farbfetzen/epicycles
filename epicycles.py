@@ -24,12 +24,12 @@ import pygame as pg
 # j is sqrt(-1), usually denoted "i" in math and physics
 # c is the position of the circle center
 
-DISCO_MODE = False
-SAVE_IMAGES = False
-SCREEN_WIDTH = 900  # 600 or less for gifs and videos
+SAVE_IMAGES = True
+SCREEN_WIDTH = 900
 SCREEN_HEIGHT = 900
 SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-FPS = 25 if SAVE_IMAGES else 60
+FPS = 60
+FPS_GIF = 25
 BACKGROUND_COLOR = (255, 255, 255)
 LINE_COLOR = [0, 0, 0]
 CIRCLE_COLOR = (128, 128, 128)
@@ -57,14 +57,14 @@ EXAMPLE_STAR = [
 ]
 
 class Epicycles:
-    def __init__(self, harmonics):
+    def __init__(self, harmonics, screenshot_path="screenshots/"):
         self.harmonics = harmonics
         for i, h in enumerate(self.harmonics):
             # Invert y-axis for pygame window.
             z = h[0]
             self.harmonics[i][0] = complex(z.real, z.imag * -1)
+        self.screenshot_path = screenshot_path
         self.running = True
-        self.image_number = 0
         self.last_point = None
         self.t = 0  # radians
         self.paused = False
@@ -73,6 +73,7 @@ class Epicycles:
         self.main_surface = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.line_surface = self.main_surface.copy()
         self.line_surface.fill(BACKGROUND_COLOR)
+        self.surface_storage = [None] * 1000  # TODO: automatically expand list if length is not enough
         pg.display.set_caption("Epicycles")
 
         for i in range(len(self.harmonics)):
@@ -81,6 +82,8 @@ class Epicycles:
         self.circle_points_complex = self.circle_points.copy()
         self.circle_points[0] = SCREEN_CENTER
         self.circle_points_complex[0] = self.to_complex(SCREEN_CENTER)
+        self.update_circles(0)
+        self.last_point = self.circle_points[-1]
 
     @staticmethod
     def to_complex(xy):
@@ -152,23 +155,14 @@ class Epicycles:
             self.circle_points[i+1] = self.from_complex(p)
 
     def draw(self):
-        if self.last_point is not None:
-            if DISCO_MODE:
-                for i in range(len(LINE_COLOR)):
-                    LINE_COLOR[i] = max(
-                        min(
-                            LINE_COLOR[i] + random.choice((-20, 0, 20)),
-                            255
-                        ),
-                        0
-                    )
-            pg.draw.line(
-                self.line_surface,
-                LINE_COLOR,
-                self.last_point,
-                self.circle_points[-1],
-                2
-            )
+        #if self.last_point is not None:
+        pg.draw.line(
+            self.line_surface,
+            LINE_COLOR,
+            self.last_point,
+            self.circle_points[-1],
+            2
+        )
 
         self.main_surface.blit(self.line_surface, (0, 0))
         if self.circles_visible:
@@ -190,12 +184,12 @@ class Epicycles:
     def run(self):
         dt = 0
         clock = pg.time.Clock()
-
-        # foo = [None] * 1000
-        # bar = 0
+        frame_counter = 0
+        screenshot_index = 0
 
         while self.running:
             dt = clock.tick(FPS) / 1000  # seconds
+            frame_counter += 1
             self.handle_input()
             if not self.paused:
                 self.update_circles(dt)
@@ -203,47 +197,28 @@ class Epicycles:
             self.last_point = self.circle_points[-1]
             pg.display.update()
 
-            if SAVE_IMAGES:
-                self.image_number += 1
-                pg.image.save(
-                    self.main_surface,
-                    "screenshots/" + str(self.image_number).zfill(5) + ".png"
-                )
+            if SAVE_IMAGES and frame_counter % FPS_GIF == 1:
+                # FIXME: frame_counter is the wront method for this!
+                # I should use a cumulative dt instead.
+                self.surface_storage[screenshot_index] = self.main_surface.copy()
+                screenshot_index += 1
 
+        if SAVE_IMAGES:
+            self.save_screenshots(screenshot_index)
 
-        #     foo[bar] = self.main_surface.copy()
-        #     bar += 1
-        # baz = [f for f in foo if f is not None]  # Better idea: just slize the list from index 0 to bar (or bar+1?)
-        # print(f"Saving {len(baz)} screenshots...", end = "")
-        # for i, b in enumerate(baz):
-        #     pg.image.save(
-        #         b,
-        #         "./screenshots/" + str(i).zfill(5) + ".png"
-        #     )
-        # print(" done.")
+    def save_screenshots(self, max_len):
+        # FIXME: If screenshot folder does not exist maybe ask user if they
+        # want to create it?
+        self.surface_storage = self.surface_storage[:max_len]
+        print(f"Saving {len(self.surface_storage)} screenshots...", end = "")
+        for i, s in enumerate(self.surface_storage):
+            pg.image.save(
+                s,
+                self.screenshot_path + str(i).zfill(6) + ".png"
+            )
+        print(" done.")
 
 if __name__ == "__main__":
     os.environ["SDL_VIDEO_CENTERED"] = "1"
     pg.init()
     Epicycles(EXAMPLE_STAR).run()
-
-
-# How to make an animated gif with gimp because I don't
-# understand how to make small gifs with imagemagick:
-# 1. load all images in gimp with file > open as layers
-# 2. image > mode > indexed: 255 colors
-# 3. filters > animation > optimize for gif
-# 4. file > export as: "filename.gif", delay = 1000/fps,
-#    no gif comment, use delay for all frames
-# Experiment with maybe removing the first frames for a better loop.
-#
-# Alternatively there is this way with imagemagick:
-# cd screenshots
-# convert -delay 4 -loop 0 -layers optimize *.png animation.gif
-# The "4" after "-delay" is 100/fps.
-# But the filesize is still larger than with gimp and I don't know why.
-#
-# Either way the file size can be further reduced by converting the
-# animated gif to a mp4 or webm using ffmpeg.
-# Example taken from https://unix.stackexchange.com/a/294892
-# ffmpeg -i animated.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" video.mp4
