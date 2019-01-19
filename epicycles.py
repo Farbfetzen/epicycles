@@ -24,7 +24,7 @@ import pygame as pg
 # j is sqrt(-1), usually denoted "i" in math and physics
 # c is the position of the circle center
 
-SAVE_IMAGES = True
+SAVE_IMAGES = False
 SCREEN_WIDTH = 900
 SCREEN_HEIGHT = 900
 SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
@@ -36,6 +36,10 @@ CIRCLE_COLOR = (128, 128, 128)
 CIRCLE_LINE_COLOR = (255, 0, 0)
 CENTER_CIRCLE_RADIUS = 400  # Adjust manually for different shapes
 MIN_SPEED = 1/16
+EXAMPLE_FLOWER = [
+    [0.3, 1j],
+    [0.3, 10j]
+]
 EXAMPLE_DIAMOND = [
     [1, 1j],
     [1/9, -3j],
@@ -221,4 +225,4 @@ class Epicycles:
 if __name__ == "__main__":
     os.environ["SDL_VIDEO_CENTERED"] = "1"
     pg.init()
-    Epicycles(EXAMPLE_STAR).run()
+    Epicycles(EXAMPLE_FLOWER).run()
