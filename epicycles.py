@@ -43,8 +43,8 @@ SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 FPS = 60
 FPS_GIF = 25
 BACKGROUND_COLOR = (255, 255, 255)
-LINE_COLOR = [0, 0, 0]
-CIRCLE_COLOR = (128, 128, 128)
+LINE_COLOR = [200, 0, 0]
+CIRCLE_COLOR = (170, 170, 170)
 CIRCLE_LINE_COLOR = (60, 60, 60)  # (255, 0, 0)
 MIN_SPEED = 1/16
 EXAMPLE_FLOWER = [
@@ -133,13 +133,13 @@ class Epicycles:
         foo.pop(0)
         h = []
         i = 1
-        sign = 1
+        sign = -1
         pop_back = True  # pop from the front or the back
         while foo:
             radius = foo.pop(-pop_back)
-            if abs(radius) >= 0.1:
+            if abs(radius) >= 0.01:
                 h.append([radius, complex(0, sign * i)])
-            if sign < 0:
+            if sign > 0:
                 i += 1
             sign *= -1
             pop_back = not pop_back
@@ -248,4 +248,4 @@ class Epicycles:
 if __name__ == "__main__":
     os.environ["SDL_VIDEO_CENTERED"] = "1"
     pg.init()
-    Epicycles(points_file="H_path.txt").run()
+    Epicycles(points_file="heart_path.txt").run()

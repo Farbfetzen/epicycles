@@ -38,6 +38,7 @@ x,y
 "
 p <- read.csv(text = p_str, header = TRUE)
 p <- p$x + p$y * 1i
+p <- p * 200
 plot(p, type = "o")
 
 # Interpolate:
@@ -52,6 +53,13 @@ for (i in 2:length(p)) {
 result <- result[-length(result)]
 # Move center to 0+0i:
 result <- result - (max(Re(result)) / 2 + (max(Im(result)) / 2) * 1i)
+
+# ---
+xy <- data.frame(x = Re(result), y = Im(result))
+write.table(xy, "H_path.txt", quote = FALSE,
+            row.names = FALSE, col.names = FALSE)
+# ---
+
 
 par(mar = c(4, 4, 0, 0)+0.1)
 plot(result, type = "o", asp = 1)
@@ -70,9 +78,8 @@ bla
 bla$a <- sub("i", "j", as.character(bla$a), fixed = TRUE)
 bla$a <- paste0("[", bla$a)
 bla$b <- paste0(bla$b, "j],")
-bla <- bla[-1, ]
 bla[nrow(bla), 2] <- sub(",", "", bla[nrow(bla), 2], fixed = TRUE)
-write.table(bla, "star_circles.txt", row.names = FALSE, col.names = FALSE,
+write.table(bla, "H_circles.txt", row.names = FALSE, col.names = FALSE,
             quote = FALSE, sep = ", ")
 # Now open the file and copy everything into the python script.
 # TODO: Write the python script so that it can load from that file.
