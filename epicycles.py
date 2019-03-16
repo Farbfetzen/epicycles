@@ -20,8 +20,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import os
 import math
-import random
-from pprint import pprint
 
 import pygame as pg
 
@@ -112,24 +110,6 @@ class Epicycles:
     def from_complex(z):
         return [z.real, z.imag]
 
-    def random(self):
-        # TODO: Scale the random circle radii so that the result fits on the
-        # screen and is not too small.
-        n = random.randint(2, 20)
-        self.harmonics = []
-        for i in range(n):
-            a = complex(random.uniform(-1, 1), random.uniform(-1, 1)) / n
-            a *= CENTER_CIRCLE_RADIUS
-            if (i + 1) % 2 == 1:
-                b = math.ceil((i + 1) / 2)
-            else:
-                b = (i + 1) // -2
-            b = complex(0, b)
-            self.harmonics.append([a, b])
-        print("\n")
-        pprint(self.harmonics)
-        self.line_surface.fill(BACKGROUND_COLOR)
-
     def handle_input(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -141,14 +121,6 @@ class Epicycles:
                     self.paused = not self.paused
                 elif event.key == pg.K_c:
                     self.circles_visible = not self.circles_visible
-                elif event.key == pg.K_r:
-                    self.random()
-                    # FIXME: refactor duplicated code:
-                    self.circle_points = [0 for i in range(len(self.harmonics)+1)]
-                    self.circle_points_complex = self.circle_points.copy()
-                    self.circle_points[0] = SCREEN_CENTER
-                    self.circle_points_complex[0] = self.to_complex(SCREEN_CENTER)
-                    self.last_point = None
                 elif event.key == pg.K_UP:
                     self.speed *= 2
                 elif event.key == pg.K_DOWN:
