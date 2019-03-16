@@ -45,30 +45,31 @@ BACKGROUND_COLOR = (255, 255, 255)
 LINE_COLOR = [0, 0, 0]
 CIRCLE_COLOR = (128, 128, 128)
 CIRCLE_LINE_COLOR = (60, 60, 60)  # (255, 0, 0)
-CENTER_CIRCLE_RADIUS = 400  # Adjust manually for different shapes
 MIN_SPEED = 1/16
 EXAMPLE_FLOWER = [
-    [0.3, 1j],
-    [0.3, 10j]
+    [150, 1j],
+    [150, 10j]
 ]
 EXAMPLE_DIAMOND = [
-    [1, 1j],
-    [1/9, -3j],
-    [1/25, 5j],
-    [1/49, -7j]
+    [250, 1j],
+    [250/9, -3j],
+    [250/25, 5j],
+    [250/49, -7j],
+    [250/81, 9j],
+    [250/121, -11j]
 ]
 EXAMPLE_SQUARE_WAVE = [
-    [1, 1j],
-    [1/3, 3j],
-    [1/5, 5j],
-    [1/7, 7j],
-    [1/9, 9j]
+    [180, 1j],
+    [60, 3j],
+    [36, 5j],
+    [180/7, 7j],
+    [20, 9j]
 ]
 EXAMPLE_STAR = [
-    [0.5447818+0.1770103j, 2j],
-    [0.2421415+0.0786765j, -3j],
-    [0.0444989+0.0144586j, 7j],
-    [0.0340763+0.0110721j, -8j]
+    [(0.5447818+0.1770103j) * 300, 2j],
+    [(0.2421415+0.0786765j) * 300, -3j],
+    [(0.0444989+0.0144586j) * 300, 7j],
+    [(0.0340763+0.0110721j) * 300, -8j]
 ]
 
 
@@ -97,9 +98,6 @@ class Epicycles:
         self.line_surface.fill(BACKGROUND_COLOR)
         self.surface_storage = [None] * 1000  # TODO: automatically expand list if length is not enough
         pg.display.set_caption("Epicycles")
-        # Scale all radii to the center circle:
-        for i in range(len(self.harmonics)):
-            self.harmonics[i][0] *= CENTER_CIRCLE_RADIUS
         self.circle_points = [0 for i in range(len(self.harmonics)+1)]
         self.circle_points[0] = self.to_complex(SCREEN_CENTER)
         self.update_circles(0)
