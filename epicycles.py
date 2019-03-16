@@ -44,7 +44,7 @@ FPS_GIF = 25
 BACKGROUND_COLOR = (255, 255, 255)
 LINE_COLOR = [0, 0, 0]
 CIRCLE_COLOR = (128, 128, 128)
-CIRCLE_LINE_COLOR = (255, 0, 0)
+CIRCLE_LINE_COLOR = (60, 60, 60)  # (255, 0, 0)
 CENTER_CIRCLE_RADIUS = 400  # Adjust manually for different shapes
 MIN_SPEED = 1/16
 EXAMPLE_FLOWER = [
@@ -97,15 +97,13 @@ class Epicycles:
         self.line_surface.fill(BACKGROUND_COLOR)
         self.surface_storage = [None] * 1000  # TODO: automatically expand list if length is not enough
         pg.display.set_caption("Epicycles")
-
+        # Scale all radii to the center circle:
         for i in range(len(self.harmonics)):
             self.harmonics[i][0] *= CENTER_CIRCLE_RADIUS
         self.circle_points = [0 for i in range(len(self.harmonics)+1)]
-        self.circle_points_complex = self.circle_points.copy()
-        self.circle_points[0] = SCREEN_CENTER
-        self.circle_points_complex[0] = self.to_complex(SCREEN_CENTER)
+        self.circle_points[0] = self.to_complex(SCREEN_CENTER)
         self.update_circles(0)
-        self.last_point = self.circle_points[-1]
+        self.last_point = self.from_complex(self.circle_points[-1])
 
     @staticmethod
     def to_complex(xy):
@@ -136,25 +134,30 @@ class Epicycles:
                     print(self.angle)
 
     def update_circles(self, dt):
-        self.angle += self.speed * dt  # radians
-        if self.angle > math.pi * 2:
+        self.angle += self.speed * dt
+        if self.angle > math.tau:
+            self.angle -= math.tau
             if SAVE_IMAGES:
                 self.running = False
 
         for i, h in enumerate(self.harmonics):
-            p = h[0] * math.e ** (h[1] * self.angle) + self.circle_points_complex[i]
-            self.circle_points_complex[i+1] = p
-            self.circle_points[i+1] = self.from_complex(p)
+            p = h[0] * math.e ** (h[1] * self.angle) + self.circle_points[i]
+            self.circle_points[i+1] = p
 
     def draw(self):
+        # Convert to complex coordinates to xy for drawing:
+        xy_points = [self.from_complex(i) for i in self.circle_points]
+        # print(xy_points[-1])
+        # print(self.last_point)
         #if self.last_point is not None:
         pg.draw.line(
             self.line_surface,
             LINE_COLOR,
             self.last_point,
-            self.circle_points[-1],
+            xy_points[-1],
             2
         )
+        self.last_point = xy_points[-1]
 
         self.main_surface.blit(self.line_surface, (0, 0))
         if not self.circles_visible:
@@ -163,15 +166,15 @@ class Epicycles:
             pg.draw.circle(
                 self.main_surface,
                 CIRCLE_COLOR,
-                [int(f) for f in self.circle_points[i]],
+                [int(f) for f in xy_points[i]],
                 max(int(abs(k[0])), 1),
                 1
             )
             pg.draw.line(
                 self.main_surface,
                 CIRCLE_LINE_COLOR,
-                self.circle_points[i],
-                self.circle_points[i+1]
+                xy_points[i],
+                xy_points[i+1]
             )
 
     def run(self):
@@ -187,7 +190,6 @@ class Epicycles:
             if not self.paused:
                 self.update_circles(dt)
             self.draw()
-            self.last_point = self.circle_points[-1]
             pg.display.update()
 
             if SAVE_IMAGES and frame_counter % FPS_GIF == 1:
