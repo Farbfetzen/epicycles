@@ -24,11 +24,9 @@ import math
 import pygame as pg
 
 
-# TODO: Try to automatically adjust the size of the center circle. Make sure
-# that the sum of the radii of all circles is less than half of the window
-# width minus a small border.
 # TODO: Load harmonics from file if given a filename. Modify the file format
 # outputtet by the R script, i.e. remove the brackets and trailing commas.
+# TODO: When importing a path rescale so that it fits the screen.
 
 # This is the formula:
 # a * exp(bj * t) + c
@@ -73,17 +71,24 @@ EXAMPLE_STAR = [
     [0.0340763+0.0110721j, -8j]
 ]
 
+
 class Epicycles:
     def __init__(self, harmonics, screenshot_path="screenshots/"):
         self.harmonics = harmonics
+        # Sort by radius:
+        self.harmonics = sorted(
+            self.harmonics,
+            key=lambda i: abs(i[0]),
+            reverse=True
+        )
+        # Invert y-axis for pygame window:
         for i, h in enumerate(self.harmonics):
-            # Invert y-axis for pygame window.
             z = h[0]
             self.harmonics[i][0] = complex(z.real, z.imag * -1)
         self.screenshot_path = screenshot_path
         self.running = True
         self.last_point = None
-        self.t = 0  # radians
+        self.angle = 0  # angle in radians
         self.paused = False
         self.circles_visible = True
         self.speed = 1  # speed of the innermost circle in radians/second
@@ -127,21 +132,17 @@ class Epicycles:
                     self.speed = max(self.speed / 2, MIN_SPEED)
                 elif event.key == pg.K_BACKSPACE:
                     self.line_surface.fill(BACKGROUND_COLOR)
+                elif event.key == pg.K_a:
+                    print(self.angle)
 
     def update_circles(self, dt):
-        self.t += self.speed * dt  # radians
-        if self.t > math.pi * 2:
-            self.t -= math.pi * 2
-            # Prevent t from becoming too big.
-            # This only works if the shape has a frequency of 1/(2pi).
-            # That means the shape must be finished after one revolution of
-            # the innermost circle. This is alway the case if the circle
-            # speed follor the pattern 1, -1, 2, -2, 3, -3, ...
+        self.angle += self.speed * dt  # radians
+        if self.angle > math.pi * 2:
             if SAVE_IMAGES:
                 self.running = False
 
         for i, h in enumerate(self.harmonics):
-            p = h[0] * math.e ** (h[1] * self.t) + self.circle_points_complex[i]
+            p = h[0] * math.e ** (h[1] * self.angle) + self.circle_points_complex[i]
             self.circle_points_complex[i+1] = p
             self.circle_points[i+1] = self.from_complex(p)
 
@@ -156,21 +157,22 @@ class Epicycles:
         )
 
         self.main_surface.blit(self.line_surface, (0, 0))
-        if self.circles_visible:
-            for i, k in enumerate(self.harmonics):
-                pg.draw.circle(
-                    self.main_surface,
-                    CIRCLE_COLOR,
-                    [int(f) for f in self.circle_points[i]],
-                    max(int(abs(k[0])), 1),
-                    1
-                )
-                pg.draw.line(
-                    self.main_surface,
-                    CIRCLE_LINE_COLOR,
-                    self.circle_points[i],
-                    self.circle_points[i+1]
-                )
+        if not self.circles_visible:
+            return
+        for i, k in enumerate(self.harmonics):
+            pg.draw.circle(
+                self.main_surface,
+                CIRCLE_COLOR,
+                [int(f) for f in self.circle_points[i]],
+                max(int(abs(k[0])), 1),
+                1
+            )
+            pg.draw.line(
+                self.main_surface,
+                CIRCLE_LINE_COLOR,
+                self.circle_points[i],
+                self.circle_points[i+1]
+            )
 
     def run(self):
         dt = 0
@@ -212,4 +214,4 @@ class Epicycles:
 if __name__ == "__main__":
     os.environ["SDL_VIDEO_CENTERED"] = "1"
     pg.init()
-    Epicycles(EXAMPLE_FLOWER).run()
+    Epicycles(EXAMPLE_STAR).run()
