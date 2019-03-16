@@ -15,75 +15,99 @@
 
 p_str <- "
 x,y
-8,1
+7,0
+6,0
+6,1
 7,1
 7,2
-8,2
-8,3
-8,4
-7,4
 7,3
 6,3
-6,4
-5,4
-5,3
-5,2
 6,2
-6,1
-5,1
-4,1
+5,2
+5,3
+4,3
 4,2
-3,2
+4,1
+5,1
+5,0
+4,0
+3,0
 3,1
 2,1
+2,0
+1,0
+0,0
+0,1
 1,1
 1,2
-2,2
-2,3
+0,2
+0,3
 1,3
-1,4
-2,4
-3,4
+2,3
+2,2
+3,2
 3,3
-4,3
-4,4
-4,5
-4,6
-3,6
+3,4
 3,5
 2,5
+2,4
+1,4
+0,4
+0,5
 1,5
 1,6
-2,6
-2,7
+0,6
+0,7
 1,7
-1,8
-2,8
-3,8
+2,7
+2,6
+3,6
 3,7
 4,7
-4,8
-5,8
-6,8
-6,7
 5,7
 5,6
+4,6
+4,5
+4,4
+5,4
 5,5
 6,5
-6,6
-7,6
+6,4
+7,4
 7,5
-8,5
-8,6
-8,7
+7,6
+6,6
+6,7
 7,7
-7,8
-8,8
 "
 p <- read.csv(text = p_str, header = TRUE)
 p <- p$x + p$y * 1i
 p <- c(p, p + 8i)
-p <- c(p, rev(p + (8 - Re(p)) * 2 + 1))
+p <- c(p, rev(p + (7 - Re(p)) * 2 + 1))
 p <- c(p, p[1])
 plot(p, type = "o", asp = 1)
 # For the rest see H_curve.R
+
+
+# Interpolate:
+n <- 20  # number of points between corners
+result <- rep(0+0i, n * (length(p) - 1) + length(p))
+for (i in 2:length(p)) {
+    new <- seq(p[i-1], p[i], length.out = n+2)
+    j <- i + i * n - n
+    result[seq(j-n-1, j)] <- new
+}
+# Remove duplicate:
+result <- result[-length(result)]
+# Move center to 0+0i:
+result <- result - (max(Re(result)) / 2 + (max(Im(result)) / 2) * 1i)
+plot(result, type = "o", asp = 1)
+length(result)
+
+x <- Re(result)
+y <- Im(result)
+xy <- cbind(x, y)
+xy <- xy * 40
+plot(xy, asp = 1)
+head(xy)
+write.table(xy, "closed_hilbert_curve.txt", row.names = FALSE, col.names = FALSE)

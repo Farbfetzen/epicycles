@@ -22,6 +22,7 @@ import os
 import math
 import pygame as pg
 from numpy.fft import ifft
+from pprint import pprint
 
 
 # TODO: Load harmonics from file if given a filename. Modify the file format
@@ -43,7 +44,7 @@ SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 FPS = 60
 FPS_GIF = 25
 BACKGROUND_COLOR = (255, 255, 255)
-LINE_COLOR = [200, 0, 0]
+LINE_COLOR = (0, 0, 0)
 CIRCLE_COLOR = (170, 170, 170)
 CIRCLE_LINE_COLOR = (60, 60, 60)  # (255, 0, 0)
 MIN_SPEED = 1/16
@@ -137,12 +138,13 @@ class Epicycles:
         pop_back = True  # pop from the front or the back
         while foo:
             radius = foo.pop(-pop_back)
-            if abs(radius) >= 0.01:
+            if abs(radius) >= 0.1:
                 h.append([radius, complex(0, sign * i)])
             if sign > 0:
                 i += 1
             sign *= -1
             pop_back = not pop_back
+        pprint(h)
         return(h)
 
     def handle_input(self):
@@ -248,4 +250,4 @@ class Epicycles:
 if __name__ == "__main__":
     os.environ["SDL_VIDEO_CENTERED"] = "1"
     pg.init()
-    Epicycles(points_file="heart_path.txt").run()
+    Epicycles(points_file="closed_hilbert_curve.txt").run()
