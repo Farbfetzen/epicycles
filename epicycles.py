@@ -20,13 +20,14 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import os
 import math
-
 import pygame as pg
+from numpy.fft import ifft
 
 
 # TODO: Load harmonics from file if given a filename. Modify the file format
 # outputtet by the R script, i.e. remove the brackets and trailing commas.
 # TODO: When importing a path rescale so that it fits the screen.
+# TODO: Remove all circles with radius less than some limit. Maybe 1 or 1/10?
 
 # This is the formula:
 # a * exp(bj * t) + c
@@ -74,8 +75,18 @@ EXAMPLE_STAR = [
 
 
 class Epicycles:
-    def __init__(self, harmonics, screenshot_path="screenshots/"):
-        self.harmonics = harmonics
+    """
+    points_file: File containing the points of the image as x and y coordinates
+        separated by whitespace and on seprate lines.
+    """
+    def __init__(self, points_file="", harmonics=None,
+            screenshot_path="screenshots/"):
+        if points_file:
+            self.harmonics = self.load_path(points_file)
+        elif harmonics is not None:
+            self.harmonics = harmonics
+        else:
+            raise ValueError("provide either points_file or harmonics")
         # Sort by radius:
         self.harmonics = sorted(
             self.harmonics,
@@ -110,6 +121,29 @@ class Epicycles:
     @staticmethod
     def from_complex(z):
         return [z.real, z.imag]
+
+    @staticmethod
+    def load_path(points_file):
+        path = []
+        with open(points_file, "r") as file:
+            for line in file:
+                path.append(complex(*[float(i) for i in line.split()]))
+        foo = ifft(path)
+        foo = list(foo)
+        foo.pop(0)
+        h = []
+        i = 1
+        sign = 1
+        pop_back = True  # pop from the front or the back
+        while foo:
+            radius = foo.pop(-pop_back)
+            if abs(radius) >= 0.1:
+                h.append([radius, complex(0, sign * i)])
+            if sign < 0:
+                i += 1
+            sign *= -1
+            pop_back = not pop_back
+        return(h)
 
     def handle_input(self):
         for event in pg.event.get():
@@ -214,4 +248,4 @@ class Epicycles:
 if __name__ == "__main__":
     os.environ["SDL_VIDEO_CENTERED"] = "1"
     pg.init()
-    Epicycles(EXAMPLE_STAR).run()
+    Epicycles(points_file="H_path.txt").run()
