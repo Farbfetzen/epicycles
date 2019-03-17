@@ -79,8 +79,9 @@ class Epicycles:
     """
     points_file: File containing the points of the image as x and y coordinates
         separated by whitespace and on seprate lines.
+    n: Maximum number of harmonics.
     """
-    def __init__(self, points_file="", harmonics=None,
+    def __init__(self, points_file="", harmonics=None, n=None,
             screenshot_path="screenshots/"):
         if points_file:
             self.harmonics = self.load_path(points_file)
@@ -88,12 +89,8 @@ class Epicycles:
             self.harmonics = harmonics
         else:
             raise ValueError("provide either points_file or harmonics")
-        # Sort by radius:
-        self.harmonics = sorted(
-            self.harmonics,
-            key=lambda i: abs(i[0]),
-            reverse=True
-        )
+        self.harmonics = self.harmonics[:n]
+        pprint(self.harmonics)
         # Invert y-axis for pygame window:
         for i, h in enumerate(self.harmonics):
             z = h[0]
@@ -144,7 +141,6 @@ class Epicycles:
                 i += 1
             sign *= -1
             pop_back = not pop_back
-        pprint(h)
         return(h)
 
     def handle_input(self):
