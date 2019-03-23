@@ -27,8 +27,6 @@ from pprint import pprint
 
 # TODO: Load harmonics from file if given a filename. Modify the file format
 # outputtet by the R script, i.e. remove the brackets and trailing commas.
-# TODO: When importing a path rescale so that it fits the screen.
-# TODO: Remove all circles with radius less than some limit. Maybe 1 or 1/10?
 
 # This is the formula:
 # a * exp(bj * t) + c
@@ -38,8 +36,8 @@ from pprint import pprint
 # c is the position of the circle center
 
 SAVE_IMAGES = False
-SCREEN_WIDTH = 900
-SCREEN_HEIGHT = 900
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 800
 SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 FPS = 60
 FPS_GIF = 25
@@ -80,11 +78,16 @@ class Epicycles:
     points_file: File containing the points of the image as x and y coordinates
         separated by whitespace and on seprate lines.
     n: Maximum number of harmonics.
+    scale_factor: A number > 0 and <= 1 indicating how much of the width and
+        height of the window the shape should occupy. To disable rescaling
+        leave it at the default (None).
     """
     def __init__(self, points_file="", harmonics=None, n=None,
-            screenshot_path="screenshots/"):
+            screenshot_path="screenshots/", scale_factor=None):
         if points_file:
-            self.harmonics = self.load_path(points_file)
+            self.harmonics = self.transform(self.load_path(
+                points_file, scale_factor
+            ))
         elif harmonics is not None:
             self.harmonics = harmonics
         else:
@@ -106,11 +109,11 @@ class Epicycles:
         self.line_surface = self.main_surface.copy()
         self.line_surface.fill(BACKGROUND_COLOR)
         self.surface_storage = [None] * 1000  # TODO: automatically expand list if length is not enough
-        pg.display.set_caption("Epicycles")
         self.circle_points = [0 for i in range(len(self.harmonics)+1)]
         self.circle_points[0] = self.to_complex(SCREEN_CENTER)
         self.update_circles(0)
         self.last_point = self.from_complex(self.circle_points[-1])
+        pg.display.set_caption("Epicycles")
 
     @staticmethod
     def to_complex(xy):
@@ -121,27 +124,49 @@ class Epicycles:
         return [z.real, z.imag]
 
     @staticmethod
-    def load_path(points_file):
-        path = []
+    def load_path(points_file, scale_factor):
+        x = []
+        y = []
         with open(points_file, "r") as file:
             for line in file:
-                path.append(complex(*[float(i) for i in line.split()]))
-        foo = ifft(path)
-        foo = list(foo)
-        foo.pop(0)
+                xy = [float(i) for i in line.split()]
+                x.append(xy[0])
+                y.append(xy[1])
+
+        if scale_factor is not None:
+            if 0 < scale_factor <= 1:
+                max_shape_x = SCREEN_WIDTH / 2 * scale_factor
+                max_shape_y = SCREEN_HEIGHT / 2 * scale_factor
+                if max_shape_x <= max_shape_y:
+                    max_x = max(map(abs, x))
+                    x = [i/max_x*max_shape_x for i in x]
+                    y = [i/max_x*max_shape_x for i in y]
+                else:
+                    max_y = max(map(abs, y))
+                    x = [i/max_y*max_shape_y for i in x]
+                    y = [i/max_y*max_shape_y for i in y]
+            else:
+                raise ValueError("Argument 'scale_factor' must be > 0 and <= 1.")
+        return [complex(*i) for i in zip(x, y)]
+
+    @staticmethod
+    def transform(path):
+        transformed = ifft(path)
+        transformed = list(transformed)
+        transformed.pop(0)
         h = []
         i = 1
         sign = -1
         pop_back = True  # pop from the front or the back
-        while foo:
-            radius = foo.pop(-pop_back)
+        while transformed:
+            radius = transformed.pop(-pop_back)
             if abs(radius) >= 0.1:
                 h.append([radius, complex(0, sign * i)])
             if sign > 0:
                 i += 1
             sign *= -1
             pop_back = not pop_back
-        return(h)
+        return h
 
     def handle_input(self):
         for event in pg.event.get():
@@ -246,4 +271,4 @@ class Epicycles:
 if __name__ == "__main__":
     os.environ["SDL_VIDEO_CENTERED"] = "1"
     pg.init()
-    Epicycles(points_file="closed_hilbert_curve.txt").run()
+    Epicycles(points_file="heart_path.txt", scale_factor=0.8).run()
