@@ -271,4 +271,4 @@ class Epicycles:
 if __name__ == "__main__":
     os.environ["SDL_VIDEO_CENTERED"] = "1"
     pg.init()
-    Epicycles(points_file="heart_path.txt", scale_factor=0.8).run()
+    Epicycles(points_file="paths/heart.txt", scale_factor=0.8).run()
