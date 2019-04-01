@@ -20,9 +20,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import os
 import math
-import pygame as pg
 from numpy.fft import ifft
 from pprint import pprint
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
+import pygame as pg
+from pygame import gfxdraw  # Must be explicitly imported
 
 
 # TODO: Load harmonics from file if given a filename. Modify the file format
@@ -42,7 +45,7 @@ SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 FPS = 60
 FPS_GIF = 25
 BACKGROUND_COLOR = (255, 255, 255)
-LINE_COLOR = (0, 0, 0)
+LINE_COLOR = (255, 0, 0)
 CIRCLE_COLOR = (170, 170, 170)
 CIRCLE_LINE_COLOR = (60, 60, 60)  # (255, 0, 0)
 MIN_SPEED = 1/16
@@ -109,10 +112,11 @@ class Epicycles:
         self.line_surface = self.main_surface.copy()
         self.line_surface.fill(BACKGROUND_COLOR)
         self.surface_storage = [None] * 1000  # TODO: automatically expand list if length is not enough
-        self.circle_points = [0 for i in range(len(self.harmonics)+1)]
+        self.circle_points = [0] * (len(self.harmonics) + 1)
         self.circle_points[0] = self.to_complex(SCREEN_CENTER)
+        self.points = []
         self.update_circles(0)
-        self.last_point = self.from_complex(self.circle_points[-1])
+        #self.last_point = self.from_complex(self.circle_points[-1])
         pg.display.set_caption("Epicycles")
 
     @staticmethod
@@ -185,8 +189,7 @@ class Epicycles:
                     self.speed = max(self.speed / 2, MIN_SPEED)
                 elif event.key == pg.K_BACKSPACE:
                     self.line_surface.fill(BACKGROUND_COLOR)
-                elif event.key == pg.K_a:
-                    print(self.angle)
+
 
     def update_circles(self, dt):
         self.angle += self.speed * dt
@@ -199,33 +202,32 @@ class Epicycles:
             p = h[0] * math.e ** (h[1] * self.angle) + self.circle_points[i]
             self.circle_points[i+1] = p
 
+        self.points.append(self.from_complex(self.circle_points[-1]))
+
     def draw(self):
-        # Convert to complex coordinates to xy for drawing:
-        xy_points = [self.from_complex(i) for i in self.circle_points]
-        # print(xy_points[-1])
-        # print(self.last_point)
-        #if self.last_point is not None:
-        pg.draw.line(
+        # Drawing the line with aalines using all points gives the same result
+        # as drawing one line segment each frame? What are those gaps?
+        self.line_surface.fill(BACKGROUND_COLOR)
+        pg.draw.aalines(
             self.line_surface,
             LINE_COLOR,
-            self.last_point,
-            xy_points[-1],
-            2
+            False,
+            self.points
         )
-        self.last_point = xy_points[-1]
-
         self.main_surface.blit(self.line_surface, (0, 0))
+
         if not self.circles_visible:
             return
+        xy_points = [self.from_complex(i) for i in self.circle_points]
         for i, k in enumerate(self.harmonics):
-            pg.draw.circle(
+            gfxdraw.aacircle(
                 self.main_surface,
-                CIRCLE_COLOR,
-                [int(f) for f in xy_points[i]],
+                int(xy_points[i][0]),
+                int(xy_points[i][1]),
                 max(int(abs(k[0])), 1),
-                1
+                CIRCLE_COLOR
             )
-            pg.draw.line(
+            pg.draw.aaline(
                 self.main_surface,
                 CIRCLE_LINE_COLOR,
                 xy_points[i],
