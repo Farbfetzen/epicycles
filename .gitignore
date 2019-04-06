@@ -15,3 +15,6 @@ __pycache__/
 
 # KDE directory preferences
 .directory
+
+# PyCharm
+.idea/
