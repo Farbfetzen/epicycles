@@ -25,7 +25,7 @@ from pprint import pprint
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame as pg
-from pygame import gfxdraw  # Must be explicitly imported
+import pygame.gfxdraw  # Must be explicitly imported
 
 
 # TODO: Load harmonics from file if given a filename. Modify the file format
@@ -86,7 +86,7 @@ class Epicycles:
         leave it at the default (None).
     """
     def __init__(self, points_file="", harmonics=None, n=None,
-            screenshot_path="screenshots/", scale_factor=None):
+                 screenshot_path="screenshots/", scale_factor=None):
         if points_file:
             self.harmonics = self.transform(self.load_path(
                 points_file, scale_factor
@@ -96,7 +96,7 @@ class Epicycles:
         else:
             raise ValueError("provide either points_file or harmonics")
         self.harmonics = self.harmonics[:n]
-        pprint(self.harmonics)
+        # pprint(self.harmonics)
         # Invert y-axis for pygame window:
         for i, h in enumerate(self.harmonics):
             z = h[0]
@@ -112,11 +112,11 @@ class Epicycles:
         self.line_surface = self.main_surface.copy()
         self.line_surface.fill(BACKGROUND_COLOR)
         self.surface_storage = [None] * 1000  # TODO: automatically expand list if length is not enough
-        self.circle_points = [0] * (len(self.harmonics) + 1)
+        self.circle_points = [0j] * (len(self.harmonics) + 1)
         self.circle_points[0] = self.to_complex(SCREEN_CENTER)
         self.points = []
         self.update_circles(0)
-        #self.last_point = self.from_complex(self.circle_points[-1])
+        # self.last_point = self.from_complex(self.circle_points[-1])
         pg.display.set_caption("Epicycles")
 
     @staticmethod
@@ -189,7 +189,8 @@ class Epicycles:
                     self.speed = max(self.speed / 2, MIN_SPEED)
                 elif event.key == pg.K_BACKSPACE:
                     self.line_surface.fill(BACKGROUND_COLOR)
-
+                    self.points = self.points[-2:]
+                    print(self.points)
 
     def update_circles(self, dt):
         self.angle += self.speed * dt
@@ -220,7 +221,8 @@ class Epicycles:
             return
         xy_points = [self.from_complex(i) for i in self.circle_points]
         for i, k in enumerate(self.harmonics):
-            gfxdraw.aacircle(
+            # noinspection PyUnresolvedReferences
+            pygame.gfxdraw.aacircle(
                 self.main_surface,
                 int(xy_points[i][0]),
                 int(xy_points[i][1]),
@@ -235,7 +237,7 @@ class Epicycles:
             )
 
     def run(self):
-        dt = 0
+        # dt = 0
         clock = pg.time.Clock()
         frame_counter = 0
         screenshot_index = 0
@@ -262,13 +264,14 @@ class Epicycles:
         # FIXME: If screenshot folder does not exist maybe ask user if they
         # want to create it?
         self.surface_storage = self.surface_storage[:max_len]
-        print(f"Saving {len(self.surface_storage)} screenshots...", end = "")
+        print(f"Saving {len(self.surface_storage)} screenshots...", end="")
         for i, s in enumerate(self.surface_storage):
             pg.image.save(
                 s,
                 self.screenshot_path + str(i).zfill(6) + ".png"
             )
         print(" done.")
+
 
 if __name__ == "__main__":
     os.environ["SDL_VIDEO_CENTERED"] = "1"
