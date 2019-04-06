@@ -21,6 +21,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 import os
 import math
 from numpy.fft import ifft
+import argparse
 from pprint import pprint
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
@@ -49,6 +50,8 @@ LINE_COLOR = (255, 0, 0)
 CIRCLE_COLOR = (170, 170, 170)
 CIRCLE_LINE_COLOR = (60, 60, 60)  # (255, 0, 0)
 MIN_SPEED = 1/16
+DEFAULT_SCALE_FACTOR = 0.8
+DEFAULT_SCREENSHOT_PATH = "screenshots/"
 EXAMPLE_FLOWER = [
     [150, 1j],
     [150, 10j]
@@ -85,16 +88,14 @@ class Epicycles:
         height of the window the shape should occupy. To disable rescaling
         leave it at the default (None).
     """
-    def __init__(self, points_file="", harmonics=None, n=None,
-                 screenshot_path="screenshots/", scale_factor=None):
-        if points_file:
-            self.harmonics = self.transform(self.load_path(
-                points_file, scale_factor
-            ))
-        elif harmonics is not None:
-            self.harmonics = harmonics
-        else:
-            raise ValueError("provide either points_file or harmonics")
+    def __init__(self, points_file, n=None,
+                 screenshot_path=DEFAULT_SCREENSHOT_PATH,
+                 scale_factor=DEFAULT_SCALE_FACTOR):
+        self.harmonics = self.transform(self.load_path(
+            points_file, scale_factor
+        ))
+        if n < 1:
+            raise ValueError("n must be bigger than 1.")
         self.harmonics = self.harmonics[:n]
         # pprint(self.harmonics)
         # Invert y-axis for pygame window:
@@ -137,7 +138,7 @@ class Epicycles:
                 x.append(xy[0])
                 y.append(xy[1])
 
-        if scale_factor is not None:
+        if scale_factor != 0:
             if 0 < scale_factor <= 1:
                 max_shape_x = SCREEN_WIDTH / 2 * scale_factor
                 max_shape_y = SCREEN_HEIGHT / 2 * scale_factor
@@ -150,7 +151,9 @@ class Epicycles:
                     x = [i/max_y*max_shape_y for i in x]
                     y = [i/max_y*max_shape_y for i in y]
             else:
-                raise ValueError("Argument 'scale_factor' must be > 0 and <= 1.")
+                raise ValueError(
+                    "Argument 'scale_factor' must be between 0 and 1."
+                )
         return [complex(*i) for i in zip(x, y)]
 
     @staticmethod
@@ -274,6 +277,28 @@ class Epicycles:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("file",
+                        help="Path to file containing the points of the shape.")
+    parser.add_argument("-n", type=int, help="Maximum number of harmonics.",
+                        metavar="")
+    parser.add_argument("-s", "--scale_factor", type=float, metavar="",
+                        help="A number > 0 and <= 1 indicating how much of " +
+                              "the width and height of the window the shape " +
+                              "should occupy. To disable rescaling set it " +
+                              f"to 0. Defaults to {DEFAULT_SCALE_FACTOR}.",
+                        default=DEFAULT_SCALE_FACTOR)
+    parser.add_argument("--screenshot_path",
+                        help="Path for the screenshots. " +
+                             f"Defaults to '{DEFAULT_SCREENSHOT_PATH}'.",
+                        metavar="")
+    args = parser.parse_args()
+
     os.environ["SDL_VIDEO_CENTERED"] = "1"
     pg.init()
-    Epicycles(points_file="paths/heart.txt", scale_factor=0.8).run()
+    ec = Epicycles(
+        points_file=args.file,
+        n=args.n,
+        scale_factor=args.scale_factor
+    )
+    ec.run()
