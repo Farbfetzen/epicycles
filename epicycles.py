@@ -88,15 +88,16 @@ class Epicycles:
         height of the window the shape should occupy. To disable rescaling
         leave it at the default (None).
     """
-    def __init__(self, points_file, n=None,
-                 screenshot_path=DEFAULT_SCREENSHOT_PATH,
-                 scale_factor=DEFAULT_SCALE_FACTOR):
+    def __init__(self, points_file, n, screenshot_path, scale_factor):
         self.harmonics = self.transform(self.load_path(
             points_file, scale_factor
         ))
-        if n < 1:
-            raise ValueError("n must be bigger than 1.")
-        self.harmonics = self.harmonics[:n]
+        print(n)
+        if n is not None:
+            if n > 0:
+                self.harmonics = self.harmonics[:n]
+            else:
+                raise ValueError("n must be positive.")
         # pprint(self.harmonics)
         # Invert y-axis for pygame window:
         for i, h in enumerate(self.harmonics):
@@ -281,7 +282,7 @@ if __name__ == "__main__":
     parser.add_argument("file",
                         help="Path to file containing the points of the shape.")
     parser.add_argument("-n", type=int, help="Maximum number of harmonics.",
-                        metavar="")
+                        metavar="", default = None)
     parser.add_argument("-s", "--scale_factor", type=float, metavar="",
                         help="A number > 0 and <= 1 indicating how much of " +
                               "the width and height of the window the shape " +
@@ -291,7 +292,7 @@ if __name__ == "__main__":
     parser.add_argument("--screenshot_path",
                         help="Path for the screenshots. " +
                              f"Defaults to '{DEFAULT_SCREENSHOT_PATH}'.",
-                        metavar="")
+                        metavar="", default = DEFAULT_SCREENSHOT_PATH)
     args = parser.parse_args()
 
     os.environ["SDL_VIDEO_CENTERED"] = "1"
@@ -299,6 +300,7 @@ if __name__ == "__main__":
     ec = Epicycles(
         points_file=args.file,
         n=args.n,
-        scale_factor=args.scale_factor
+        scale_factor=args.scale_factor,
+        screenshot_path=args.screenshot_path
     )
     ec.run()
