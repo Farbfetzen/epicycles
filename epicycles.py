@@ -24,13 +24,12 @@ from numpy.fft import ifft
 import argparse
 from pprint import pprint
 
-os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
+# os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame as pg
-import pygame.gfxdraw  # Must be explicitly imported
 
 
 # TODO: Load harmonics from file if given a filename. Modify the file format
-# outputtet by the R script, i.e. remove the brackets and trailing commas.
+# output by the R script, i.e. remove the brackets and trailing commas.
 
 # This is the formula:
 # a * exp(bj * t) + c
@@ -40,9 +39,13 @@ import pygame.gfxdraw  # Must be explicitly imported
 # c is the position of the circle center
 
 SAVE_IMAGES = False
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 800
-SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+SCREEN_WIDTH = 700
+SCREEN_HEIGHT = 700
+SMOOTH_SCALE_FACTOR = 2
+SCREEN_CENTER = (
+    SCREEN_WIDTH // 2 * SMOOTH_SCALE_FACTOR,
+    SCREEN_HEIGHT // 2 * SMOOTH_SCALE_FACTOR
+)
 FPS = 60
 FPS_GIF = 25
 BACKGROUND_COLOR = (255, 255, 255)
@@ -78,6 +81,12 @@ EXAMPLE_STAR = [
     [(0.0340763+0.0110721j) * 300, -8j]
 ]
 
+# aalines don't look right. They always have some gaps in between them.
+# So instead of using aalines I draw non-aalines but onto a big surface
+# which gets smoothscaled down into the window. This produces a nice looking
+# result, is fast and easy.
+
+
 
 class Epicycles:
     """
@@ -92,7 +101,7 @@ class Epicycles:
         self.harmonics = self.transform(self.load_path(
             points_file, scale_factor
         ))
-        print(n)
+        # print(n)
         if n is not None:
             if n > 0:
                 self.harmonics = self.harmonics[:n]
@@ -111,14 +120,18 @@ class Epicycles:
         self.circles_visible = True
         self.speed = 1  # speed of the innermost circle in radians/second
         self.main_surface = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        self.line_surface = self.main_surface.copy()
+        self.big_surface = pg.Surface((
+            SCREEN_WIDTH * SMOOTH_SCALE_FACTOR,
+            SCREEN_WIDTH * SMOOTH_SCALE_FACTOR
+        ))
+        self.line_surface = self.big_surface.copy()
         self.line_surface.fill(BACKGROUND_COLOR)
         self.surface_storage = [None] * 1000  # TODO: automatically expand list if length is not enough
         self.circle_points = [0j] * (len(self.harmonics) + 1)
         self.circle_points[0] = self.to_complex(SCREEN_CENTER)
-        self.points = []
+        self.point = []
         self.update_circles(0)
-        # self.last_point = self.from_complex(self.circle_points[-1])
+        self.previous_point = self.point
         pg.display.set_caption("Epicycles")
 
     @staticmethod
@@ -141,6 +154,7 @@ class Epicycles:
 
         if scale_factor != 0:
             if 0 < scale_factor <= 1:
+                scale_factor *= SMOOTH_SCALE_FACTOR
                 max_shape_x = SCREEN_WIDTH / 2 * scale_factor
                 max_shape_y = SCREEN_HEIGHT / 2 * scale_factor
                 if max_shape_x <= max_shape_y:
@@ -206,39 +220,43 @@ class Epicycles:
         for i, h in enumerate(self.harmonics):
             p = h[0] * math.e ** (h[1] * self.angle) + self.circle_points[i]
             self.circle_points[i+1] = p
-
-        self.points.append(self.from_complex(self.circle_points[-1]))
+        self.previous_point = self.point
+        self.point = self.from_complex(self.circle_points[-1])
 
     def draw(self):
-        # Drawing the line with aalines using all points gives the same result
-        # as drawing one line segment each frame? What are those gaps?
-        self.line_surface.fill(BACKGROUND_COLOR)
-        pg.draw.aalines(
+        pg.draw.line(
             self.line_surface,
             LINE_COLOR,
-            False,
-            self.points
+            self.previous_point,
+            self.point,
+            3
         )
-        self.main_surface.blit(self.line_surface, (0, 0))
+        self.big_surface.blit(self.line_surface, (0, 0))
 
         if not self.circles_visible:
             return
-        xy_points = [self.from_complex(i) for i in self.circle_points]
+        xy_points = [[int(xy) for xy in self.from_complex(i)] for i in self.circle_points]
         for i, k in enumerate(self.harmonics):
-            # noinspection PyUnresolvedReferences
-            pygame.gfxdraw.aacircle(
-                self.main_surface,
-                int(xy_points[i][0]),
-                int(xy_points[i][1]),
+            pg.draw.circle(
+                self.big_surface,
+                CIRCLE_COLOR,
+                (int(xy_points[i][0]),
+                 int(xy_points[i][1])),
                 max(int(abs(k[0])), 1),
-                CIRCLE_COLOR
+                2
             )
-            pg.draw.aaline(
-                self.main_surface,
+            pg.draw.line(
+                self.big_surface,
                 CIRCLE_LINE_COLOR,
                 xy_points[i],
-                xy_points[i+1]
+                xy_points[i+1],
+                2
             )
+        pg.transform.smoothscale(
+            self.big_surface,
+            (SCREEN_WIDTH, SCREEN_HEIGHT),
+            self.main_surface
+        )
 
     def run(self):
         # dt = 0
