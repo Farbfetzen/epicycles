@@ -31,6 +31,11 @@ import pygame as pg
 # TODO: Load harmonics from file if given a filename. Modify the file format
 # output by the R script, i.e. remove the brackets and trailing commas.
 
+# aalines don't look right. They always have some gaps in between them.
+# So instead of using aalines I draw non-aalines but onto a big surface
+# which gets smoothscaled down into the window. This produces a nice looking
+# result, is fast and easy.
+
 # This is the formula:
 # a * exp(bj * t) + c
 # a is the start position, abs(a) is the circle radius
@@ -47,14 +52,12 @@ SCREEN_CENTER = (
     SCREEN_HEIGHT // 2 * SMOOTH_SCALE_FACTOR
 )
 FPS = 60
-FPS_GIF = 25
 BACKGROUND_COLOR = (255, 255, 255)
 LINE_COLOR = (255, 0, 0)
 CIRCLE_COLOR = (170, 170, 170)
 CIRCLE_LINE_COLOR = (60, 60, 60)  # (255, 0, 0)
 MIN_SPEED = 1/16
 DEFAULT_SCALE_FACTOR = 0.8
-DEFAULT_SCREENSHOT_PATH = "screenshots/"
 EXAMPLE_FLOWER = [
     [150, 1j],
     [150, 10j]
@@ -81,12 +84,6 @@ EXAMPLE_STAR = [
     [(0.0340763+0.0110721j) * 300, -8j]
 ]
 
-# aalines don't look right. They always have some gaps in between them.
-# So instead of using aalines I draw non-aalines but onto a big surface
-# which gets smoothscaled down into the window. This produces a nice looking
-# result, is fast and easy.
-
-
 
 class Epicycles:
     """
@@ -97,7 +94,7 @@ class Epicycles:
         height of the window the shape should occupy. To disable rescaling
         leave it at the default (None).
     """
-    def __init__(self, points_file, n, screenshot_path, scale_factor):
+    def __init__(self, points_file, n, scale_factor):
         self.harmonics = self.transform(self.load_path(
             points_file, scale_factor
         ))
@@ -112,7 +109,6 @@ class Epicycles:
         for i, h in enumerate(self.harmonics):
             z = h[0]
             self.harmonics[i][0] = complex(z.real, z.imag * -1)
-        self.screenshot_path = screenshot_path
         self.running = True
         self.last_point = None
         self.angle = 0  # angle in radians
@@ -126,7 +122,6 @@ class Epicycles:
         ))
         self.line_surface = self.big_surface.copy()
         self.line_surface.fill(BACKGROUND_COLOR)
-        self.surface_storage = [None] * 1000  # TODO: automatically expand list if length is not enough
         self.circle_points = [0j] * (len(self.harmonics) + 1)
         self.circle_points[0] = self.to_complex(SCREEN_CENTER)
         self.point = []
@@ -207,15 +202,11 @@ class Epicycles:
                     self.speed = max(self.speed / 2, MIN_SPEED)
                 elif event.key == pg.K_BACKSPACE:
                     self.line_surface.fill(BACKGROUND_COLOR)
-                    self.points = self.points[-2:]
-                    print(self.points)
 
     def update_circles(self, dt):
         self.angle += self.speed * dt
         if self.angle > math.tau:
             self.angle -= math.tau
-            if SAVE_IMAGES:
-                self.running = False
 
         for i, h in enumerate(self.harmonics):
             p = h[0] * math.e ** (h[1] * self.angle) + self.circle_points[i]
@@ -233,25 +224,24 @@ class Epicycles:
         )
         self.big_surface.blit(self.line_surface, (0, 0))
 
-        if not self.circles_visible:
-            return
-        xy_points = [[int(xy) for xy in self.from_complex(i)] for i in self.circle_points]
-        for i, k in enumerate(self.harmonics):
-            pg.draw.circle(
-                self.big_surface,
-                CIRCLE_COLOR,
-                (int(xy_points[i][0]),
-                 int(xy_points[i][1])),
-                max(int(abs(k[0])), 1),
-                2
-            )
-            pg.draw.line(
-                self.big_surface,
-                CIRCLE_LINE_COLOR,
-                xy_points[i],
-                xy_points[i+1],
-                2
-            )
+        if self.circles_visible:
+            xy_points = [[int(xy) for xy in self.from_complex(i)]
+                         for i in self.circle_points]
+            for i, k in enumerate(self.harmonics):
+                pg.draw.circle(
+                    self.big_surface,
+                    CIRCLE_COLOR,
+                    xy_points[i],
+                    max(int(abs(k[0])), 1),
+                    2
+                )
+                pg.draw.line(
+                    self.big_surface,
+                    CIRCLE_LINE_COLOR,
+                    xy_points[i],
+                    xy_points[i+1],
+                    2
+                )
         pg.transform.smoothscale(
             self.big_surface,
             (SCREEN_WIDTH, SCREEN_HEIGHT),
@@ -259,40 +249,15 @@ class Epicycles:
         )
 
     def run(self):
-        # dt = 0
         clock = pg.time.Clock()
-        frame_counter = 0
-        screenshot_index = 0
 
         while self.running:
             dt = clock.tick(FPS) / 1000  # seconds
-            frame_counter += 1
             self.handle_input()
             if not self.paused:
                 self.update_circles(dt)
             self.draw()
             pg.display.update()
-
-            if SAVE_IMAGES and frame_counter % FPS_GIF == 1:
-                # FIXME: frame_counter is the wront method for this!
-                # I should use a cumulative dt instead.
-                self.surface_storage[screenshot_index] = self.main_surface.copy()
-                screenshot_index += 1
-
-        if SAVE_IMAGES:
-            self.save_screenshots(screenshot_index)
-
-    def save_screenshots(self, max_len):
-        # FIXME: If screenshot folder does not exist maybe ask user if they
-        # want to create it?
-        self.surface_storage = self.surface_storage[:max_len]
-        print(f"Saving {len(self.surface_storage)} screenshots...", end="")
-        for i, s in enumerate(self.surface_storage):
-            pg.image.save(
-                s,
-                self.screenshot_path + str(i).zfill(6) + ".png"
-            )
-        print(" done.")
 
 
 if __name__ == "__main__":
@@ -307,10 +272,6 @@ if __name__ == "__main__":
                               "should occupy. To disable rescaling set it " +
                               f"to 0. Defaults to {DEFAULT_SCALE_FACTOR}.",
                         default=DEFAULT_SCALE_FACTOR)
-    parser.add_argument("--screenshot_path",
-                        help="Path for the screenshots. " +
-                             f"Defaults to '{DEFAULT_SCREENSHOT_PATH}'.",
-                        metavar="", default = DEFAULT_SCREENSHOT_PATH)
     args = parser.parse_args()
 
     os.environ["SDL_VIDEO_CENTERED"] = "1"
@@ -318,7 +279,6 @@ if __name__ == "__main__":
     ec = Epicycles(
         points_file=args.file,
         n=args.n,
-        scale_factor=args.scale_factor,
-        screenshot_path=args.screenshot_path
+        scale_factor=args.scale_factor
     )
     ec.run()
