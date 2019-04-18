@@ -122,6 +122,11 @@ class Epicycles:
         ))
         self.line_surface = self.big_surface.copy()
         self.line_surface.fill(BACKGROUND_COLOR)
+        self.alpha = 0
+        self.alpha_increment = 255 / (math.tau * FPS / self.speed)
+        self.transp_surface = self.line_surface.copy()
+        self.transp_surface.set_alpha(5)
+        #self.transp_surface.set_alpha(1)
         self.circle_points = [0j] * (len(self.harmonics) + 1)
         self.circle_points[0] = self.to_complex(SCREEN_CENTER)
         self.point = []
@@ -215,14 +220,16 @@ class Epicycles:
         self.point = self.from_complex(self.circle_points[-1])
 
     def draw(self):
-        pg.draw.line(
-            self.line_surface,
-            LINE_COLOR,
-            self.previous_point,
-            self.point,
-            3
-        )
-        self.big_surface.blit(self.line_surface, (0, 0))
+        if not self.paused:
+            self.line_surface.blit(self.transp_surface, (0, 0))
+            pg.draw.line(
+                self.line_surface,
+                LINE_COLOR,
+                self.previous_point,
+                self.point,
+                4
+            )
+            self.big_surface.blit(self.line_surface, (0, 0))
 
         if self.circles_visible:
             xy_points = [[int(xy) for xy in self.from_complex(i)]
