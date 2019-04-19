@@ -57,11 +57,9 @@ LINE_COLOR = (255, 0, 0)
 CIRCLE_COLOR = (170, 170, 170)
 CIRCLE_LINE_COLOR = (60, 60, 60)  # (255, 0, 0)
 MIN_SPEED = 1/16
+MAX_SPEED = 16
 DEFAULT_SCALE_FACTOR = 0.8
-EXAMPLE_FLOWER = [
-    [150, 1j],
-    [150, 10j]
-]
+
 EXAMPLE_DIAMOND = [
     [250, 1j],
     [250/9, -3j],
@@ -77,12 +75,6 @@ EXAMPLE_SQUARE_WAVE = [
     [180/7, 7j],
     [20, 9j]
 ]
-EXAMPLE_STAR = [
-    [(0.5447818+0.1770103j) * 300, 2j],
-    [(0.2421415+0.0786765j) * 300, -3j],
-    [(0.0444989+0.0144586j) * 300, 7j],
-    [(0.0340763+0.0110721j) * 300, -8j]
-]
 
 
 class Epicycles:
@@ -94,11 +86,10 @@ class Epicycles:
         height of the window the shape should occupy. To disable rescaling
         leave it at the default (None).
     """
-    def __init__(self, points_file, n, scale_factor):
+    def __init__(self, points_file, n, scale_factor, fade):
         self.harmonics = self.transform(self.load_path(
             points_file, scale_factor
         ))
-        # print(n)
         if n is not None:
             if n > 0:
                 self.harmonics = self.harmonics[:n]
@@ -111,7 +102,9 @@ class Epicycles:
             self.harmonics[i][0] = complex(z.real, z.imag * -1)
         self.running = True
         self.last_point = None
+        self.fade = fade
         self.angle = 0  # angle in radians
+        self.angle_increment = 0
         self.paused = False
         self.circles_visible = True
         self.speed = 1  # speed of the innermost circle in radians/second
@@ -122,11 +115,16 @@ class Epicycles:
         ))
         self.line_surface = self.big_surface.copy()
         self.line_surface.fill(BACKGROUND_COLOR)
-        self.alpha = 0
-        self.alpha_increment = 255 / (math.tau * FPS / self.speed)
+        self.alpha_angle = 0
+        # self.alpha_increment is best left at 10. Smaller numbers cause more
+        # blits per frame of the transparent surface which may cause framerate
+        # issues. Larger numbers make the line fade in a choppy looking way.
+        self.alpha_increment = 10
+        self.angle_per_alpha = math.tau / 255 * self.alpha_increment
         self.transp_surface = self.line_surface.copy()
-        self.transp_surface.set_alpha(5)
-        #self.transp_surface.set_alpha(1)
+        self.transp_surface.fill(
+            (self.alpha_increment, self.alpha_increment, self.alpha_increment)
+        )
         self.circle_points = [0j] * (len(self.harmonics) + 1)
         self.circle_points[0] = self.to_complex(SCREEN_CENTER)
         self.point = []
@@ -202,14 +200,17 @@ class Epicycles:
                 elif event.key == pg.K_c:
                     self.circles_visible = not self.circles_visible
                 elif event.key == pg.K_UP:
-                    self.speed *= 2
+                    self.speed = min(self.speed * 2, MAX_SPEED)
                 elif event.key == pg.K_DOWN:
                     self.speed = max(self.speed / 2, MIN_SPEED)
                 elif event.key == pg.K_BACKSPACE:
                     self.line_surface.fill(BACKGROUND_COLOR)
+                # elif event.key == pg.K_a:
+                #     print(self.angle)
 
     def update_circles(self, dt):
-        self.angle += self.speed * dt
+        self.angle_increment = self.speed * dt
+        self.angle += self.angle_increment
         if self.angle > math.tau:
             self.angle -= math.tau
 
@@ -221,7 +222,15 @@ class Epicycles:
 
     def draw(self):
         if not self.paused:
-            self.line_surface.blit(self.transp_surface, (0, 0))
+            if self.fade:
+                self.alpha_angle += self.angle_increment
+                while self.alpha_angle > self.angle_per_alpha:
+                    self.line_surface.blit(
+                        self.transp_surface,
+                        (0, 0),
+                        special_flags=pg.BLEND_RGBA_ADD
+                    )
+                    self.alpha_angle -= self.angle_per_alpha
             pg.draw.line(
                 self.line_surface,
                 LINE_COLOR,
@@ -239,7 +248,7 @@ class Epicycles:
                     self.big_surface,
                     CIRCLE_COLOR,
                     xy_points[i],
-                    max(int(abs(k[0])), 1),
+                    max(int(abs(k[0])), 2),
                     2
                 )
                 pg.draw.line(
@@ -269,23 +278,41 @@ class Epicycles:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("file",
-                        help="Path to file containing the points of the shape.")
-    parser.add_argument("-n", type=int, help="Maximum number of harmonics.",
-                        metavar="", default = None)
-    parser.add_argument("-s", "--scale_factor", type=float, metavar="",
-                        help="A number > 0 and <= 1 indicating how much of " +
-                              "the width and height of the window the shape " +
-                              "should occupy. To disable rescaling set it " +
-                              f"to 0. Defaults to {DEFAULT_SCALE_FACTOR}.",
-                        default=DEFAULT_SCALE_FACTOR)
+    parser.add_argument(
+        "file",
+        help="Path to file containing the points of the shape."
+    )
+    parser.add_argument(
+        "-n",
+        type=int,
+        help="Maximum number of harmonics or circles.",
+        metavar="",
+        default = None
+    )
+    parser.add_argument(
+        "-s",
+        "--scale_factor",
+        type=float,
+        metavar="",
+        help="A number > 0 and <= 1 indicating how much of the width and " +
+             "height of the window the shape should occupy. To disable " +
+             f"rescaling set it to 0. Defaults to {DEFAULT_SCALE_FACTOR}.",
+        default=DEFAULT_SCALE_FACTOR
+    )
+    parser.add_argument(
+        "-f",
+        "--fade",
+        action="store_true",
+        help="Fade the line over time so that it vanishes after one cycle."
+    )
     args = parser.parse_args()
 
     os.environ["SDL_VIDEO_CENTERED"] = "1"
     pg.init()
     ec = Epicycles(
-        points_file=args.file,
-        n=args.n,
-        scale_factor=args.scale_factor
+        args.file,
+        args.n,
+        args.scale_factor,
+        args.fade
     )
     ec.run()
