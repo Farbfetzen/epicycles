@@ -60,22 +60,6 @@ MIN_SPEED = 1/16
 MAX_SPEED = 16
 DEFAULT_SCALE_FACTOR = 0.8
 
-EXAMPLE_DIAMOND = [
-    [250, 1j],
-    [250/9, -3j],
-    [250/25, 5j],
-    [250/49, -7j],
-    [250/81, 9j],
-    [250/121, -11j]
-]
-EXAMPLE_SQUARE_WAVE = [
-    [180, 1j],
-    [60, 3j],
-    [36, 5j],
-    [180/7, 7j],
-    [20, 9j]
-]
-
 
 class Epicycles:
     """
