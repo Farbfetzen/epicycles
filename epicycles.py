@@ -70,16 +70,18 @@ class Epicycles:
         height of the window the shape should occupy. To disable rescaling
         leave it at the default (None).
     """
-    def __init__(self, points_file, n, scale_factor, fade):
-        self.harmonics = self.transform(self.load_path(
-            points_file, scale_factor
-        ))
+    def __init__(self, points_file, n, scale_factor, fade, invert_rotation):
+        self.harmonics, offset = self.transform(
+            self.load_path(
+                points_file, scale_factor
+            ),
+            invert_rotation
+        )
         if n is not None:
             if n > 0:
                 self.harmonics = self.harmonics[:n]
             else:
                 raise ValueError("n must be positive.")
-        # pprint(self.harmonics)
         # Invert y-axis for pygame window:
         for i, h in enumerate(self.harmonics):
             z = h[0]
@@ -110,7 +112,10 @@ class Epicycles:
             (self.alpha_increment, self.alpha_increment, self.alpha_increment)
         )
         self.circle_points = [0j] * (len(self.harmonics) + 1)
-        self.circle_points[0] = self.to_complex(SCREEN_CENTER)
+        self.circle_points[0] = self.to_complex((
+            SCREEN_CENTER[0] - int(offset[0]),
+            SCREEN_CENTER[1] - int(offset[1])
+        ))
         self.point = []
         self.update_circles(0)
         self.previous_point = self.point
@@ -126,51 +131,54 @@ class Epicycles:
 
     @staticmethod
     def load_path(points_file, scale_factor):
-        x = []
-        y = []
+        all_x = []
+        all_y = []
         with open(points_file, "r") as file:
             for line in file:
-                xy = [float(i) for i in line.split()]
-                x.append(xy[0])
-                y.append(xy[1])
+                x, y = line.split()
+                all_x.append(float(x))
+                all_y.append(float(y))
 
         if scale_factor != 0:
             if 0 < scale_factor <= 1:
-                scale_factor *= SMOOTH_SCALE_FACTOR
-                max_shape_x = SCREEN_WIDTH / 2 * scale_factor
-                max_shape_y = SCREEN_HEIGHT / 2 * scale_factor
-                if max_shape_x <= max_shape_y:
-                    max_x = max(map(abs, x))
-                    x = [i/max_x*max_shape_x for i in x]
-                    y = [i/max_x*max_shape_x for i in y]
+                max_allowed_x = SCREEN_WIDTH / 2 * scale_factor
+                max_allowed_y = SCREEN_HEIGHT / 2 * scale_factor
+                if max_allowed_x <= max_allowed_y:
+                    ratio = max_allowed_x / max(map(abs, all_x))
+                    all_x = [x * ratio for x in all_x]
+                    all_y = [y * ratio for y in all_y]
                 else:
-                    max_y = max(map(abs, y))
-                    x = [i/max_y*max_shape_y for i in x]
-                    y = [i/max_y*max_shape_y for i in y]
+                    ratio = max_allowed_y / max(map(abs, all_y))
+                    all_x = [x * ratio for x in all_x]
+                    all_y = [y * ratio for y in all_y]
             else:
                 raise ValueError(
                     "Argument 'scale_factor' must be between 0 and 1."
                 )
-        return [complex(*i) for i in zip(x, y)]
+            all_x = [x * SMOOTH_SCALE_FACTOR for x in all_x]
+            all_y = [y * SMOOTH_SCALE_FACTOR for y in all_y]
 
-    @staticmethod
-    def transform(path):
+        return [complex(*i) for i in zip(all_x, all_y)]
+
+    def transform(self, path, invert=False):
         transformed = ifft(path)
         transformed = list(transformed)
-        transformed.pop(0)
+        offset = self.from_complex(transformed.pop(0))
         h = []
         i = 1
-        sign = -1
+        increase_i = False
+        sign = 1 if invert else -1
         pop_back = True  # pop from the front or the back
         while transformed:
             radius = transformed.pop(-pop_back)
             if abs(radius) >= 0.1:
                 h.append([radius, complex(0, sign * i)])
-            if sign > 0:
+            if increase_i:
                 i += 1
+            increase_i = not increase_i
             sign *= -1
             pop_back = not pop_back
-        return h
+        return h, offset
 
     def handle_input(self):
         for event in pg.event.get():
@@ -197,7 +205,6 @@ class Epicycles:
         self.angle += self.angle_increment
         if self.angle > math.tau:
             self.angle -= math.tau
-
         for i, h in enumerate(self.harmonics):
             p = h[0] * math.e ** (h[1] * self.angle) + self.circle_points[i]
             self.circle_points[i+1] = p
@@ -291,6 +298,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Fade the line over time so that it vanishes after one cycle."
     )
+    parser.add_argument(
+        "-i",
+        "--invert",
+        action="store_true",
+        help="Invert the rotation direction of all circles."
+    )
     args = parser.parse_args()
 
     os.environ["SDL_VIDEO_CENTERED"] = "1"
@@ -299,6 +312,7 @@ if __name__ == "__main__":
         args.file,
         args.n,
         args.scale_factor,
-        args.fade
+        args.fade,
+        args.invert
     )
     ec.run()
