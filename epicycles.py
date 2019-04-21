@@ -22,7 +22,6 @@ import os
 import math
 from numpy.fft import ifft
 import argparse
-from time import time
 from pprint import pprint
 
 # os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
@@ -44,17 +43,12 @@ import pygame as pg
 # j is sqrt(-1), usually denoted "i" in math and physics
 # c is the position of the circle center
 
-SAVE_IMAGES = False
-SCREEN_WIDTH = 700
-SCREEN_HEIGHT = 700
+DEFAULT_WINDOW_WIDTH = 700
+DEFAULT_WINDOW_HEIGHT = 700
 SMOOTH_SCALE_FACTOR = 1.5  # < 2 for performance but > 1 for good looks
-SCREEN_CENTER = (
-    SCREEN_WIDTH // 2 * SMOOTH_SCALE_FACTOR,
-    SCREEN_HEIGHT // 2 * SMOOTH_SCALE_FACTOR
-)
 FPS = 60
 BACKGROUND_COLOR = (255, 255, 255)
-LINE_COLOR = (255, 0, 0)
+PATH_COLOR = (255, 0, 0)
 CIRCLE_COLOR = (170, 170, 170)
 CIRCLE_LINE_COLOR = (60, 60, 60)
 MIN_SPEED = 1/16
@@ -72,7 +66,52 @@ class Epicycles:
         leave it at the default (None).
     """
     def __init__(self, points_file, n, scale_factor, fade, invert_rotation):
-        self.time_measurements = []
+        self.running = True
+        self.speed = 1  # speed of the innermost circle in radians/second
+        self.paused = False
+        self.circles_visible = True
+        self.fade = fade
+        self.angle = 0  # angle in radians
+        self.angle_increment = 0
+        # Create clock instance in self.run() so time doesn't run during setup.
+        self.clock = None
+
+        # Setup surfaces:
+        # TODO: Make the default window size adjustable via command line arguments
+        self.window_width = DEFAULT_WINDOW_WIDTH
+        self.window_height = DEFAULT_WINDOW_HEIGHT
+        display_info = pg.display.Info()
+        display_width = display_info.current_w
+        display_height = display_info.current_h
+        if DEFAULT_WINDOW_WIDTH >= display_width:
+            self.window_width = display_width - 200
+            self.window_height = self.window_width
+        if DEFAULT_WINDOW_HEIGHT >= display_height:
+            self.window_height = display_height - 200
+            self.window_width = self.window_height
+
+        self.window = pg.display.set_mode(
+            (self.window_width, self.window_height)
+        )
+        pg.display.set_caption("Epicycles")
+        self.big_surface = pg.Surface((
+            self.window_width * SMOOTH_SCALE_FACTOR,
+            self.window_height * SMOOTH_SCALE_FACTOR
+        ))
+        self.line_surface = self.big_surface.copy()
+        self.transp_surface = self.line_surface.copy()
+        self.line_surface.fill(BACKGROUND_COLOR)
+        self.alpha_angle = 0
+        # self.alpha_increment is best left at 10. Smaller numbers cause more
+        # blits per frame of the transparent surface which may cause framerate
+        # issues. Larger numbers make the line fade in a choppy looking way.
+        self.alpha_increment = 10
+        self.transp_surface.fill(
+            (self.alpha_increment, self.alpha_increment, self.alpha_increment)
+        )
+        self.angle_per_alpha = math.tau / 255 * self.alpha_increment
+
+        # Setup harmonics:
         self.harmonics, offset = self.transform(
             self.load_path(
                 points_file, scale_factor
@@ -88,40 +127,16 @@ class Epicycles:
         for i, h in enumerate(self.harmonics):
             z = h[0]
             self.harmonics[i][0] = complex(z.real, z.imag * -1)
-        self.running = True
-        self.fade = fade
-        self.angle = 0  # angle in radians
-        self.angle_increment = 0
-        self.paused = False
-        self.circles_visible = True
-        self.speed = 1  # speed of the innermost circle in radians/second
-        self.main_surface = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        self.big_surface = pg.Surface((
-            SCREEN_WIDTH * SMOOTH_SCALE_FACTOR,
-            SCREEN_WIDTH * SMOOTH_SCALE_FACTOR
-        ))
-        self.line_surface = self.big_surface.copy()
-        self.line_surface.fill(BACKGROUND_COLOR)
-        self.alpha_angle = 0
-        # self.alpha_increment is best left at 10. Smaller numbers cause more
-        # blits per frame of the transparent surface which may cause framerate
-        # issues. Larger numbers make the line fade in a choppy looking way.
-        self.alpha_increment = 10
-        self.angle_per_alpha = math.tau / 255 * self.alpha_increment
-        self.transp_surface = self.line_surface.copy()
-        self.transp_surface.fill(
-            (self.alpha_increment, self.alpha_increment, self.alpha_increment)
-        )
+
+        # Setup circles and points:
         self.circle_points = [0j] * (len(self.harmonics) + 1)
         self.circle_points[0] = self.to_complex((
-            SCREEN_CENTER[0] - int(offset[0]),
-            SCREEN_CENTER[1] - int(offset[1])
+            self.window_width // 2 * SMOOTH_SCALE_FACTOR - int(offset[0]),
+            self.window_height // 2 * SMOOTH_SCALE_FACTOR - int(offset[1])
         ))
         self.point = []
         self.update_circles(0)
         self.previous_point = self.point
-        pg.display.set_caption("Epicycles")
-
 
     @staticmethod
     def to_complex(xy):
@@ -131,8 +146,7 @@ class Epicycles:
     def from_complex(z):
         return [z.real, z.imag]
 
-    @staticmethod
-    def load_path(points_file, scale_factor):
+    def load_path(self, points_file, scale_factor):
         all_x = []
         all_y = []
         with open(points_file, "r") as file:
@@ -143,8 +157,8 @@ class Epicycles:
 
         if scale_factor != 0:
             if 0 < scale_factor <= 1:
-                max_allowed_x = SCREEN_WIDTH / 2 * scale_factor
-                max_allowed_y = SCREEN_HEIGHT / 2 * scale_factor
+                max_allowed_x = self.window_width / 2 * scale_factor
+                max_allowed_y = self.window_height / 2 * scale_factor
                 if max_allowed_x <= max_allowed_y:
                     ratio = max_allowed_x / max(map(abs, all_x))
                     all_x = [x * ratio for x in all_x]
@@ -199,11 +213,13 @@ class Epicycles:
                     self.speed = max(self.speed / 2, MIN_SPEED)
                 elif event.key == pg.K_BACKSPACE:
                     self.line_surface.fill(BACKGROUND_COLOR)
-                elif DEBUG_MODE and event.key == pg.K_a:
-                    print(f"angle: {round(self.angle, 3)}°")
+                elif DEBUG_MODE and event.key == pg.K_d:
+                    info = f"\nangle: {round(self.angle, 3)}°" + \
+                           f"\nspeed: {self.speed}" + \
+                           f"\nfps: {int(self.clock.get_fps())}"
+                    print(info)
 
     def update_circles(self, dt):
-        start_time = time()
         self.angle_increment = self.speed * dt
         self.angle += self.angle_increment
         if self.angle > math.tau:
@@ -213,7 +229,6 @@ class Epicycles:
             self.circle_points[i+1] = p
         self.previous_point = self.point
         self.point = self.from_complex(self.circle_points[-1])
-        self.time_measurements.append(time() - start_time)
 
     def draw(self):
         if not self.paused:
@@ -228,7 +243,7 @@ class Epicycles:
                     self.alpha_angle -= self.angle_per_alpha
             pg.draw.line(
                 self.line_surface,
-                LINE_COLOR,
+                PATH_COLOR,
                 self.previous_point,
                 self.point,
                 3
@@ -255,22 +270,19 @@ class Epicycles:
                 )
         pg.transform.smoothscale(
             self.big_surface,
-            (SCREEN_WIDTH, SCREEN_HEIGHT),
-            self.main_surface
+            (self.window_width, self.window_height),
+            self.window
         )
 
     def run(self):
-        clock = pg.time.Clock()
-
+        self.clock = pg.time.Clock()
         while self.running:
-            dt = clock.tick(FPS) / 1000  # seconds
+            dt = self.clock.tick(FPS) / 1000  # seconds
             self.handle_input()
             if not self.paused:
                 self.update_circles(dt)
             self.draw()
             pg.display.update()
-
-            if DEBUG_MODE: pg.display.set_caption(str(int(clock.get_fps())))
 
 
 if __name__ == "__main__":
@@ -320,11 +332,11 @@ if __name__ == "__main__":
 
     os.environ["SDL_VIDEO_CENTERED"] = "1"
     pg.init()
-    ec = Epicycles(
+    E = Epicycles(
         args.file,
         args.n,
         args.scale_factor,
         args.fade,
         args.invert
     )
-    ec.run()
+    E.run()
