@@ -46,7 +46,7 @@ import pygame as pg
 SAVE_IMAGES = False
 SCREEN_WIDTH = 700
 SCREEN_HEIGHT = 700
-SMOOTH_SCALE_FACTOR = 2
+SMOOTH_SCALE_FACTOR = 1.5  # < 2 for performance but > 1 for good looks
 SCREEN_CENTER = (
     SCREEN_WIDTH // 2 * SMOOTH_SCALE_FACTOR,
     SCREEN_HEIGHT // 2 * SMOOTH_SCALE_FACTOR
@@ -55,7 +55,7 @@ FPS = 60
 BACKGROUND_COLOR = (255, 255, 255)
 LINE_COLOR = (255, 0, 0)
 CIRCLE_COLOR = (170, 170, 170)
-CIRCLE_LINE_COLOR = (60, 60, 60)  # (255, 0, 0)
+CIRCLE_LINE_COLOR = (60, 60, 60)
 MIN_SPEED = 1/16
 MAX_SPEED = 16
 DEFAULT_SCALE_FACTOR = 0.8
@@ -220,9 +220,9 @@ class Epicycles:
                 LINE_COLOR,
                 self.previous_point,
                 self.point,
-                4
+                3
             )
-            self.big_surface.blit(self.line_surface, (0, 0))
+        self.big_surface.blit(self.line_surface, (0, 0))
 
         if self.circles_visible:
             xy_points = [[int(xy) for xy in self.from_complex(i)]
@@ -233,14 +233,14 @@ class Epicycles:
                     CIRCLE_COLOR,
                     xy_points[i],
                     max(int(abs(k[0])), 2),
-                    2
+                    1
                 )
                 pg.draw.line(
                     self.big_surface,
                     CIRCLE_LINE_COLOR,
                     xy_points[i],
                     xy_points[i+1],
-                    2
+                    1
                 )
         pg.transform.smoothscale(
             self.big_surface,
@@ -258,6 +258,8 @@ class Epicycles:
                 self.update_circles(dt)
             self.draw()
             pg.display.update()
+
+            # pg.display.set_caption(str(int(clock.get_fps())))
 
 
 if __name__ == "__main__":
