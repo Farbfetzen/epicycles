@@ -22,6 +22,7 @@ import os
 import math
 from numpy.fft import ifft
 import argparse
+from time import time
 from pprint import pprint
 
 # os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
@@ -71,6 +72,7 @@ class Epicycles:
         leave it at the default (None).
     """
     def __init__(self, points_file, n, scale_factor, fade, invert_rotation):
+        self.time_measurements = []
         self.harmonics, offset = self.transform(
             self.load_path(
                 points_file, scale_factor
@@ -87,7 +89,6 @@ class Epicycles:
             z = h[0]
             self.harmonics[i][0] = complex(z.real, z.imag * -1)
         self.running = True
-        self.last_point = None
         self.fade = fade
         self.angle = 0  # angle in radians
         self.angle_increment = 0
@@ -120,6 +121,7 @@ class Epicycles:
         self.update_circles(0)
         self.previous_point = self.point
         pg.display.set_caption("Epicycles")
+
 
     @staticmethod
     def to_complex(xy):
@@ -197,10 +199,11 @@ class Epicycles:
                     self.speed = max(self.speed / 2, MIN_SPEED)
                 elif event.key == pg.K_BACKSPACE:
                     self.line_surface.fill(BACKGROUND_COLOR)
-                # elif event.key == pg.K_a:
-                #     print(self.angle)
+                elif DEBUG_MODE and event.key == pg.K_a:
+                    print(f"angle: {round(self.angle, 3)}°")
 
     def update_circles(self, dt):
+        start_time = time()
         self.angle_increment = self.speed * dt
         self.angle += self.angle_increment
         if self.angle > math.tau:
@@ -210,6 +213,7 @@ class Epicycles:
             self.circle_points[i+1] = p
         self.previous_point = self.point
         self.point = self.from_complex(self.circle_points[-1])
+        self.time_measurements.append(time() - start_time)
 
     def draw(self):
         if not self.paused:
@@ -266,7 +270,7 @@ class Epicycles:
             self.draw()
             pg.display.update()
 
-            # pg.display.set_caption(str(int(clock.get_fps())))
+            if DEBUG_MODE: pg.display.set_caption(str(int(clock.get_fps())))
 
 
 if __name__ == "__main__":
@@ -304,7 +308,15 @@ if __name__ == "__main__":
         action="store_true",
         help="Invert the rotation direction of all circles."
     )
+    parser.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        help="Debug mode."
+    )
     args = parser.parse_args()
+
+    DEBUG_MODE = args.debug
 
     os.environ["SDL_VIDEO_CENTERED"] = "1"
     pg.init()
