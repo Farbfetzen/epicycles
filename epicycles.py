@@ -22,7 +22,6 @@ import os
 import math
 from numpy.fft import ifft
 import argparse
-from pprint import pprint
 
 # os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame as pg
@@ -45,8 +44,8 @@ import pygame as pg
 
 DEFAULT_WINDOW_WIDTH = 700
 DEFAULT_WINDOW_HEIGHT = 700
-SMOOTH_SCALE_FACTOR = 1.5  # < 2 for performance but > 1 for good looks
-FPS = 60
+SMOOTH_SCALE_FACTOR = 1.5  # < 2 for performance but > 1 nice looking result
+FPS = 30
 BACKGROUND_COLOR = (255, 255, 255)
 PATH_COLOR = (255, 0, 0)
 CIRCLE_COLOR = (170, 170, 170)
@@ -54,6 +53,8 @@ CIRCLE_LINE_COLOR = (60, 60, 60)
 MIN_SPEED = 1/16
 MAX_SPEED = 16
 DEFAULT_SCALE_FACTOR = 0.8
+CIRCLE_LINE_THICKNESS = 1
+PATH_LINE_THICKNESS = 3
 
 
 class Epicycles:
@@ -134,6 +135,11 @@ class Epicycles:
             self.window_width // 2 * SMOOTH_SCALE_FACTOR - int(offset[0]),
             self.window_height // 2 * SMOOTH_SCALE_FACTOR - int(offset[1])
         ))
+        self.circle_radii = []
+        for h in self.harmonics:
+            radius = int(abs(h[0]))
+            if radius >= CIRCLE_LINE_THICKNESS:
+                self.circle_radii.append(radius)
         self.point = []
         self.update_circles(0)
         self.previous_point = self.point
@@ -214,7 +220,8 @@ class Epicycles:
                 elif event.key == pg.K_BACKSPACE:
                     self.line_surface.fill(BACKGROUND_COLOR)
                 elif DEBUG_MODE and event.key == pg.K_d:
-                    info = f"\nangle: {round(self.angle, 3)}°" + \
+                    info = f"\nangle: {round(self.angle, 3)} radians" + \
+                           f" ({round(math.degrees(self.angle), 2)}°)" + \
                            f"\nspeed: {self.speed}" + \
                            f"\nfps: {int(self.clock.get_fps())}"
                     print(info)
@@ -246,28 +253,28 @@ class Epicycles:
                 PATH_COLOR,
                 self.previous_point,
                 self.point,
-                3
+                PATH_LINE_THICKNESS
             )
         self.big_surface.blit(self.line_surface, (0, 0))
 
         if self.circles_visible:
             xy_points = [[int(xy) for xy in self.from_complex(i)]
                          for i in self.circle_points]
-            for i, k in enumerate(self.harmonics):
+            for i, r in enumerate(self.circle_radii):
                 pg.draw.circle(
                     self.big_surface,
                     CIRCLE_COLOR,
                     xy_points[i],
-                    max(int(abs(k[0])), 2),
-                    1
+                    r,
+                    CIRCLE_LINE_THICKNESS
                 )
-                pg.draw.line(
-                    self.big_surface,
-                    CIRCLE_LINE_COLOR,
-                    xy_points[i],
-                    xy_points[i+1],
-                    1
-                )
+            pg.draw.lines(
+                self.big_surface,
+                CIRCLE_LINE_COLOR,
+                False,
+                xy_points,
+                CIRCLE_LINE_THICKNESS
+            )
         pg.transform.smoothscale(
             self.big_surface,
             (self.window_width, self.window_height),
@@ -327,7 +334,6 @@ if __name__ == "__main__":
         help="Debug mode."
     )
     args = parser.parse_args()
-
     DEBUG_MODE = args.debug
 
     os.environ["SDL_VIDEO_CENTERED"] = "1"
