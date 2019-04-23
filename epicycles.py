@@ -66,10 +66,11 @@ class Epicycles:
         height of the window the shape should occupy. To disable rescaling
         leave it at the default (None).
     """
-    def __init__(self, points_file, n, scale_factor, fade, invert_rotation):
+    def __init__(self, points_file, n, scale_factor, fade, 
+				 invert_rotation, start_paused):
         self.running = True
         self.speed = 1  # speed of the innermost circle in radians/second
-        self.paused = False
+        self.paused = start_paused
         self.circles_visible = True
         self.fade = fade
         self.angle = 0  # angle in radians
@@ -333,6 +334,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Debug mode."
     )
+    parser.add_argument(
+        "-p",
+        "--paused",
+        action="store_true",
+        help="Start the app paused."
+    )
     args = parser.parse_args()
     DEBUG_MODE = args.debug
 
@@ -343,6 +350,7 @@ if __name__ == "__main__":
         args.n,
         args.scale_factor,
         args.fade,
-        args.invert
+        args.invert,
+        args.paused
     )
     E.run()
