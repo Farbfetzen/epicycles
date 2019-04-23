@@ -103,10 +103,10 @@ class Epicycles:
         self.transp_surface = self.line_surface.copy()
         self.line_surface.fill(BACKGROUND_COLOR)
         self.alpha_angle = 0
-        # self.alpha_increment is best left at 10. Smaller numbers cause more
+        # self.alpha_increment is best left at 5. Smaller numbers cause more
         # blits per frame of the transparent surface which may cause framerate
         # issues. Larger numbers make the line fade in a choppy looking way.
-        self.alpha_increment = 10
+        self.alpha_increment = 5
         self.transp_surface.fill(
             (self.alpha_increment, self.alpha_increment, self.alpha_increment)
         )
