@@ -59,14 +59,6 @@ MAX_DIST = 4  # Max. distance between two points before interpolation kicks in
 
 
 class Epicycles:
-    """
-    points_file: File containing the points of the image as x and y coordinates
-        separated by whitespace and on seprate lines.
-    n: Maximum number of harmonics.
-    scale_factor: A number > 0 and <= 1 indicating how much of the width and
-        height of the window the shape should occupy. To disable rescaling
-        leave it at the default (None).
-    """
     def __init__(self, points_file, n, scale_factor, fade, 
                  invert_rotation, start_paused):
         self.running = True
