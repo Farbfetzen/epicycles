@@ -51,10 +51,11 @@ PATH_COLOR = (255, 0, 0)
 CIRCLE_COLOR = (170, 170, 170)
 CIRCLE_LINE_COLOR = (60, 60, 60)
 MIN_SPEED = 1/16
-MAX_SPEED = 16
+MAX_SPEED = 4
 DEFAULT_SCALE_FACTOR = 0.8
 CIRCLE_LINE_THICKNESS = 1
 PATH_LINE_THICKNESS = 3
+MAX_DIST = 4  # Max. distance between two points before interpolation kicks in
 
 
 class Epicycles:
@@ -67,13 +68,14 @@ class Epicycles:
         leave it at the default (None).
     """
     def __init__(self, points_file, n, scale_factor, fade, 
-				 invert_rotation, start_paused):
+                 invert_rotation, start_paused):
         self.running = True
         self.speed = 1  # speed of the innermost circle in radians/second
         self.paused = start_paused
         self.circles_visible = True
         self.fade = fade
         self.angle = 0  # angle in radians
+        self.previous_angle = self.angle
         self.angle_increment = 0
         # Create clock instance in self.run() so time doesn't run during setup.
         self.clock = None
@@ -108,10 +110,10 @@ class Epicycles:
         # blits per frame of the transparent surface which may cause framerate
         # issues. Larger numbers make the line fade in a choppy looking way.
         self.alpha_increment = 5
+        self.angle_per_alpha = math.tau / 255 * self.alpha_increment
         self.transp_surface.fill(
             (self.alpha_increment, self.alpha_increment, self.alpha_increment)
         )
-        self.angle_per_alpha = math.tau / 255 * self.alpha_increment
 
         # Setup harmonics:
         self.harmonics, offset = self.transform(
@@ -152,6 +154,10 @@ class Epicycles:
     @staticmethod
     def from_complex(z):
         return [z.real, z.imag]
+
+    @staticmethod
+    def get_dist(p1, p2):
+        return math.hypot(p1[0] - p2[0], p1[1] - p2[1])
 
     def load_path(self, points_file, scale_factor):
         all_x = []
@@ -227,16 +233,20 @@ class Epicycles:
                            f"\nfps: {int(self.clock.get_fps())}"
                     print(info)
 
+    def get_new_point(self, angle):
+        for i, h in enumerate(self.harmonics):
+            p = h[0] * math.e ** (h[1] * angle) + self.circle_points[i]
+            self.circle_points[i+1] = p
+        return self.from_complex(self.circle_points[-1])
+
     def update_circles(self, dt):
+        self.previous_angle = self.angle
         self.angle_increment = self.speed * dt
         self.angle += self.angle_increment
         if self.angle > math.tau:
             self.angle -= math.tau
-        for i, h in enumerate(self.harmonics):
-            p = h[0] * math.e ** (h[1] * self.angle) + self.circle_points[i]
-            self.circle_points[i+1] = p
         self.previous_point = self.point
-        self.point = self.from_complex(self.circle_points[-1])
+        self.point = self.get_new_point(self.angle)
 
     def draw(self):
         if not self.paused:
@@ -249,13 +259,16 @@ class Epicycles:
                         special_flags=pg.BLEND_RGBA_ADD
                     )
                     self.alpha_angle -= self.angle_per_alpha
-            pg.draw.line(
-                self.line_surface,
-                PATH_COLOR,
-                self.previous_point,
-                self.point,
-                PATH_LINE_THICKNESS
-            )
+            if self.interpolated_points is None:
+                pg.draw.line(
+                    self.line_surface,
+                    PATH_COLOR,
+                    self.previous_point,
+                    self.point,
+                    PATH_LINE_THICKNESS
+                )
+            else:
+                pg.draw.lines(self.line_surface, PATH_COLOR, False, self.interpolated_points, PATH_LINE_THICKNESS)
         self.big_surface.blit(self.line_surface, (0, 0))
 
         if self.circles_visible:
@@ -282,6 +295,22 @@ class Epicycles:
             self.window
         )
 
+    def interpolate(self, p1, p2, a1, a2):
+        mean_angle = (a1 + a2) / 2
+        new_point = self.get_new_point(mean_angle)
+        result = []
+        if self.get_dist(p1, new_point) > MAX_DIST:
+            interp_1 = self.interpolate(p1, new_point, a1, mean_angle)
+        else:
+            interp_1 = ()
+        result.append(new_point)
+        if self.get_dist(new_point, p2) > MAX_DIST:
+            interp_2 = self.interpolate(new_point, p2, mean_angle, a2)
+        else:
+            interp_2 = ()
+        result = (*interp_1, new_point, *interp_2)
+        return result
+
     def run(self):
         self.clock = pg.time.Clock()
         while self.running:
@@ -289,6 +318,28 @@ class Epicycles:
             self.handle_input()
             if not self.paused:
                 self.update_circles(dt)
+
+                # draft of new interpolation:
+                # TODO: clean this and the rest of the class up!
+                if self.get_dist(self.previous_point, self.point) > MAX_DIST:
+                    reset_angle = False
+                    if self.angle < self.previous_angle:
+                        # This is necessary if the new angle is > 2pi but is
+                        # reset to < 0 in self.update_circles() which would
+                        # prevent meaningful averaging of the angles.
+                        self.angle += math.tau
+                        reset_angle = True
+                    self.interpolated_points = (
+                        self.previous_point,
+                        *self.interpolate(self.previous_point, self.point, self.previous_angle, self.angle),
+                        self.point
+                    )
+                    if reset_angle:
+                        self.angle -= math.tau
+                else:
+                    self.interpolated_points = None
+                #
+
             self.draw()
             pg.display.update()
 
