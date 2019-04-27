@@ -218,12 +218,14 @@ class Epicycles:
                     self.speed = max(self.speed / 2, MIN_SPEED)
                 elif event.key == pg.K_BACKSPACE:
                     self.line_surface.fill(BACKGROUND_COLOR)
-                elif DEBUG_MODE and event.key == pg.K_d:
-                    info = f"\nangle: {round(self.angle, 3)} radians" + \
-                           f" ({round(math.degrees(self.angle), 2)}°)" + \
-                           f"\nspeed: {self.speed}" + \
-                           f"\nfps: {int(self.clock.get_fps())}"
-                    print(info)
+                elif event.key == pg.K_d:
+                    debug_info = (
+                        f"\nangle: {round(self.angle, 3)} radians" +
+                        f" ({round(math.degrees(self.angle), 2)}°)" +
+                        f"\nspeed: {self.speed}" +
+                        f"\nfps: {int(self.clock.get_fps())}"
+                    )
+                    print(debug_info)
 
     def get_new_point(self, angle):
         for i, h in enumerate(self.harmonics):
@@ -372,19 +374,12 @@ if __name__ == "__main__":
         help="Invert the rotation direction of all circles."
     )
     parser.add_argument(
-        "-d",
-        "--debug",
-        action="store_true",
-        help="Debug mode."
-    )
-    parser.add_argument(
         "-p",
         "--paused",
         action="store_true",
         help="Start the app paused."
     )
     args = parser.parse_args()
-    DEBUG_MODE = args.debug
 
     os.environ["SDL_VIDEO_CENTERED"] = "1"
     pg.init()
