@@ -55,7 +55,8 @@ MAX_SPEED = 4
 DEFAULT_SCALE_FACTOR = 0.8
 CIRCLE_LINE_THICKNESS = 1
 PATH_LINE_THICKNESS = 3
-MAX_DIST = 4  # Max. distance between two points before interpolation kicks in
+# Max. distance between two points before interpolation kicks in:
+MAX_DIST = 5 * SMOOTH_SCALE_FACTOR
 
 
 class Epicycles:
@@ -135,9 +136,9 @@ class Epicycles:
             radius = int(abs(h[0]))
             if radius >= CIRCLE_LINE_THICKNESS:
                 self.circle_radii.append(radius)
-        self.point = []
-        self.update_circles(0)
-        self.previous_point = self.point
+        self.previous_point = ()
+        self.point = self.get_new_point(self.angle)
+        self.interpolated_points = ()
 
     @staticmethod
     def to_complex(xy):
@@ -145,7 +146,7 @@ class Epicycles:
 
     @staticmethod
     def from_complex(z):
-        return [z.real, z.imag]
+        return z.real, z.imag
 
     @staticmethod
     def get_dist(p1, p2):
@@ -233,14 +234,29 @@ class Epicycles:
             self.circle_points[i+1] = p
         return self.from_complex(self.circle_points[-1])
 
-    def update_circles(self, dt):
+    def update(self, dt):
         self.previous_angle = self.angle
         self.angle_increment = self.speed * dt
         self.angle += self.angle_increment
-        if self.angle > math.tau:
-            self.angle -= math.tau
         self.previous_point = self.point
         self.point = self.get_new_point(self.angle)
+
+        if self.get_dist(self.previous_point, self.point) > MAX_DIST:
+            self.interpolated_points = (
+                    (self.previous_point,) +
+                    self.interpolate(
+                        self.previous_point,
+                        self.point,
+                        self.previous_angle,
+                        self.angle
+                    ) +
+                    (self.point,)
+            )
+        else:
+            self.interpolated_points = ()
+
+        if self.angle > math.tau:
+            self.angle -= math.tau
 
     def draw(self):
         if not self.paused:
@@ -253,7 +269,15 @@ class Epicycles:
                         special_flags=pg.BLEND_RGBA_ADD
                     )
                     self.alpha_angle -= self.angle_per_alpha
-            if self.interpolated_points is None:
+            if self.interpolated_points:
+                pg.draw.lines(
+                    self.line_surface,
+                    PATH_COLOR,
+                    False,
+                    self.interpolated_points,
+                    PATH_LINE_THICKNESS
+                )
+            else:
                 pg.draw.line(
                     self.line_surface,
                     PATH_COLOR,
@@ -261,8 +285,6 @@ class Epicycles:
                     self.point,
                     PATH_LINE_THICKNESS
                 )
-            else:
-                pg.draw.lines(self.line_surface, PATH_COLOR, False, self.interpolated_points, PATH_LINE_THICKNESS)
         self.big_surface.blit(self.line_surface, (0, 0))
 
         if self.circles_visible:
@@ -292,17 +314,12 @@ class Epicycles:
     def interpolate(self, p1, p2, a1, a2):
         mean_angle = (a1 + a2) / 2
         new_point = self.get_new_point(mean_angle)
-        result = []
+        result = ()
         if self.get_dist(p1, new_point) > MAX_DIST:
-            interp_1 = self.interpolate(p1, new_point, a1, mean_angle)
-        else:
-            interp_1 = ()
-        result.append(new_point)
+            result += self.interpolate(p1, new_point, a1, mean_angle)
+        result += (new_point, )
         if self.get_dist(new_point, p2) > MAX_DIST:
-            interp_2 = self.interpolate(new_point, p2, mean_angle, a2)
-        else:
-            interp_2 = ()
-        result = (*interp_1, new_point, *interp_2)
+            result += self.interpolate(new_point, p2, mean_angle, a2)
         return result
 
     def run(self):
@@ -311,29 +328,7 @@ class Epicycles:
             dt = self.clock.tick(FPS) / 1000  # seconds
             self.handle_input()
             if not self.paused:
-                self.update_circles(dt)
-
-                # draft of new interpolation:
-                # TODO: clean this and the rest of the class up!
-                if self.get_dist(self.previous_point, self.point) > MAX_DIST:
-                    reset_angle = False
-                    if self.angle < self.previous_angle:
-                        # This is necessary if the new angle is > 2pi but is
-                        # reset to < 0 in self.update_circles() which would
-                        # prevent meaningful averaging of the angles.
-                        self.angle += math.tau
-                        reset_angle = True
-                    self.interpolated_points = (
-                        self.previous_point,
-                        *self.interpolate(self.previous_point, self.point, self.previous_angle, self.angle),
-                        self.point
-                    )
-                    if reset_angle:
-                        self.angle -= math.tau
-                else:
-                    self.interpolated_points = None
-                #
-
+                self.update(dt)
             self.draw()
             pg.display.update()
 
