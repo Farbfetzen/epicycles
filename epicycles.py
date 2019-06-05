@@ -60,8 +60,8 @@ MAX_DIST = 5 * SMOOTH_SCALE_FACTOR
 
 
 class Epicycles:
-    def __init__(self, points_file, n, scale_factor, fade, 
-                 invert_rotation, start_paused):
+    def __init__(self, points_file, n, scale_factor, fade,
+                 reverse_rotation, start_paused):
         self.running = True
         self.speed = 1  # speed of the innermost circle in radians/second
         self.paused = start_paused
@@ -113,7 +113,7 @@ class Epicycles:
             self.load_path(
                 points_file, scale_factor
             ),
-            invert_rotation
+            reverse_rotation
         )
         if n is not None:
             if n > 0:
@@ -182,14 +182,14 @@ class Epicycles:
 
         return [complex(*i) for i in zip(all_x, all_y)]
 
-    def transform(self, path, invert=False):
+    def transform(self, path, reverse=False):
         transformed = ifft(path)
         transformed = list(transformed)
         offset = self.from_complex(transformed.pop(0))
         h = []
         i = 1
         increase_i = False
-        sign = 1 if invert else -1
+        sign = 1 if reverse else -1
         pop_back = True  # pop from the front or the back
         while transformed:
             radius = transformed.pop(-pop_back)
@@ -213,9 +213,9 @@ class Epicycles:
                     self.paused = not self.paused
                 elif event.key == pg.K_c:
                     self.circles_visible = not self.circles_visible
-                elif event.key == pg.K_UP:
+                elif event.key in (pg.K_PLUS, pg.K_KP_PLUS):
                     self.speed = min(self.speed * 2, MAX_SPEED)
-                elif event.key == pg.K_DOWN:
+                elif event.key in (pg.K_MINUS, pg.K_KP_MINUS):
                     self.speed = max(self.speed / 2, MIN_SPEED)
                 elif event.key == pg.K_BACKSPACE:
                     self.line_surface.fill(BACKGROUND_COLOR)
@@ -363,10 +363,10 @@ if __name__ == "__main__":
         help="Fade the line over time so that it vanishes after one cycle."
     )
     parser.add_argument(
-        "-i",
-        "--invert",
+        "-r",
+        "--reverse",
         action="store_true",
-        help="Invert the rotation direction of all circles."
+        help="Reverse the rotation direction of all circles."
     )
     parser.add_argument(
         "-p",
@@ -383,7 +383,7 @@ if __name__ == "__main__":
         args.n,
         args.scale_factor,
         args.fade,
-        args.invert,
+        args.reverse,
         args.paused
     )
     E.run()
