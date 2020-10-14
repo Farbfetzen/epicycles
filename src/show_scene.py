@@ -36,9 +36,9 @@ class Show(scene.Scene):
             # elif event.key == pygame.K_c:
             #     self.epicycles.circles_visible = not self.epicycles.circles_visible
             elif event.key in (pygame.K_PLUS, pygame.K_KP_PLUS):
-                self.epicycles.speed_up()
+                self.epicycles.change_speed(1)
             elif event.key in (pygame.K_MINUS, pygame.K_KP_MINUS):
-                self.epicycles.speed_down()
+                self.epicycles.change_speed(-1)
             # elif event.key == pygame.K_BACKSPACE:
             #     self.epicycles.erase_line()
             # elif event.key == pygame.K_f:

@@ -18,7 +18,9 @@ class Epicycles:
     def __init__(self, filename, n,
                  scale, fade, reverse, target_surface_rect):
         window_width, window_height = target_surface_rect.size
-        self.speed = 1  # speed of the innermost circle in radians/second
+        self.speed_index = 3
+        # speed of the innermost circle in radians/second-
+        self.speed = constants.SPEEDS[self.speed_index]
         self.circles_visible = True
         self.fade = fade
         self.angle = 0  # angle in radians
@@ -192,11 +194,9 @@ class Epicycles:
             result += self.interpolate(new_point, p2, mean_angle, a2)
         return result
 
-    def speed_down(self):
-        self.speed = max(self.speed / 2, constants.MIN_SPEED)
-
-    def speed_up(self):
-        self.speed = min(self.speed * 2, constants.MAX_SPEED)
+    def change_speed(self, s):
+        self.speed_index = min(max(self.speed_index + s, 0), len(constants.SPEEDS) - 1)
+        self.speed = constants.SPEEDS[self.speed_index]
 
     @staticmethod
     def to_complex(xy):

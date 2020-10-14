@@ -8,6 +8,4 @@ CIRCLE_COLOR = (170, 170, 170)
 CIRCLE_LINE_COLOR = (60, 60, 60)
 # Max. distance between two points before interpolation kicks in:
 MAX_DIST = 5
-MIN_SPEED = 1/16
-MAX_SPEED = 4
-# TODO: Use a constant speed list and a speed index.
+SPEEDS = (1/16, 1/4, 1/2, 1, 2, 3, 4)
