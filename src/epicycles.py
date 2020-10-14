@@ -150,24 +150,11 @@ class Epicycles:
         self.window_height = window_height
 
         # Setup harmonics:
-        self.harmonics, offset = self.transform(
-            self.load_path(
-                filename, scale
-            ),
-            reverse
-        )
-        new_harmonics, new_offset = self.load_file(
+        self.harmonics, offset = self.load_file(
             filename,
             scale,
             target_surface_rect
         )
-        print(offset)
-        print(new_offset)
-        print("---")
-        print(self.harmonics)
-        print(new_harmonics)
-
-
         if n > 0:
             self.harmonics = self.harmonics[:n]
         # Invert y-axis for pygame window:
@@ -189,57 +176,6 @@ class Epicycles:
         self.previous_point = ()
         self.point = self.get_new_point(self.angle)
         self.interpolated_points = ()
-
-    def load_path(self, points_file, scale_factor):
-        all_x = []
-        all_y = []
-        with open(points_file, "r") as file:
-            file.readline()
-            for line in file:
-                x, y = line.split()
-                all_x.append(float(x))
-                all_y.append(float(y))
-
-        if scale_factor != 0:
-            if 0 < scale_factor <= 1:
-                max_allowed_x = self.window_width / 2 * scale_factor
-                max_allowed_y = self.window_height / 2 * scale_factor
-                if max_allowed_x <= max_allowed_y:
-                    ratio = max_allowed_x / max(map(abs, all_x))
-                    all_x = [x * ratio for x in all_x]
-                    all_y = [y * ratio for y in all_y]
-                else:
-                    ratio = max_allowed_y / max(map(abs, all_y))
-                    all_x = [x * ratio for x in all_x]
-                    all_y = [y * ratio for y in all_y]
-            else:
-                raise ValueError(
-                    "Argument 'scale_factor' must be between 0 and 1."
-                )
-
-        c_points = [complex(*xy) for xy in zip(all_x, all_y)]
-        print(c_points)
-        return c_points
-
-    def transform(self, path, reverse=False):
-        transformed = numpy.fft.ifft(path)
-        transformed = list(transformed)
-        offset = self.from_complex(transformed.pop(0))
-        h = []
-        i = 1
-        increase_i = False
-        sign = 1 if reverse else -1
-        pop_back = True  # pop from the front or the back
-        while transformed:
-            radius = transformed.pop(-pop_back)
-            if abs(radius) >= 0.1:
-                h.append([radius, complex(0, sign * i)])
-            if increase_i:
-                i += 1
-            increase_i = not increase_i
-            sign *= -1
-            pop_back = not pop_back
-        return h, offset
 
     def load_file(self, filename, scale, target_surface_rect):
         with open(filename, "r") as file:
@@ -294,8 +230,6 @@ class Epicycles:
 
         # Transform:
         complex_points = [complex(*p) for p in points]
-        print(complex_points)
-        print("---")
         transformed = list(numpy.fft.ifft(complex_points))
         offset = pygame.Vector2(self.from_complex(transformed.pop(0)))
         harmonics = []
