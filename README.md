@@ -2,7 +2,7 @@
 
 Requires Python >= 3.6, PyGame 2 and NumPy.
  
-To run the app you must provide the path to a textfile containg the points of the desired shape:
+To run the app you must provide a path to a text file containing the points of the desired shape:
 ```
 python epicycles.py shapes/heart.txt
 ```
