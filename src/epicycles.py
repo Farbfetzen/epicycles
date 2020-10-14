@@ -173,10 +173,6 @@ class Epicycles:
     def from_complex(z):
         return pygame.Vector2(z.real, z.imag)
 
-    @staticmethod
-    def get_dist(p1, p2):
-        return math.hypot(p1[0] - p2[0], p1[1] - p2[1])
-
     def get_new_point(self, angle):
         for i, h in enumerate(self.harmonics):
             p = h[0] * math.e ** (h[1] * angle) + self.circle_points[i]
@@ -187,10 +183,10 @@ class Epicycles:
         mean_angle = (a1 + a2) / 2
         new_point = self.get_new_point(mean_angle)
         result = ()
-        if self.get_dist(p1, new_point) > constants.MAX_DIST:
+        if p1.distance_to(new_point) > constants.MAX_DIST:
             result += self.interpolate(p1, new_point, a1, mean_angle)
         result += (new_point, )
-        if self.get_dist(new_point, p2) > constants.MAX_DIST:
+        if new_point.distance_to(p2) > constants.MAX_DIST:
             result += self.interpolate(new_point, p2, mean_angle, a2)
         return result
 
@@ -209,7 +205,7 @@ class Epicycles:
         self.previous_point = self.point
         self.point = self.get_new_point(self.angle)
 
-        if self.get_dist(self.previous_point, self.point) > constants.MAX_DIST:
+        if self.previous_point.distance_to(self.point) > constants.MAX_DIST:
             self.interpolated_points = (
                     (self.previous_point,) +
                     self.interpolate(
