@@ -64,8 +64,8 @@ class Show(scene.Scene):
             pass
 
         # DEBUG:
-        pygame.draw.circle(self.target_surface, (0, 0, 255), self.target_surface.get_rect().center, 1)
-
+        r = self.target_surface.get_rect()
+        pygame.draw.circle(self.target_surface, (0, 0, 255), r.center, 1)
 
     def start(self):
         # Only relevant when coming from the Draw scene.
