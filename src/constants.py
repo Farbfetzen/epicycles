@@ -8,9 +8,8 @@ CIRCLE_COLOR = (170, 170, 170)
 CIRCLE_LINE_COLOR = (60, 60, 60)
 CIRCLE_LINE_THICKNESS = 1
 PATH_LINE_THICKNESS = 3
-SMOOTH_SCALE_FACTOR = 1.5  # < 2 for performance but > 1 for nice looking result
 # Max. distance between two points before interpolation kicks in:
-MAX_DIST = 5 * SMOOTH_SCALE_FACTOR
+MAX_DIST = 5
 MIN_SPEED = 1/16
 MAX_SPEED = 4
 # TODO: Use a constant speed list and a speed index.

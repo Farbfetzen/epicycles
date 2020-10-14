@@ -35,15 +35,15 @@ class Show(scene.Scene):
                 self.paused = not self.paused
             # elif event.key == pygame.K_c:
             #     self.epicycles.circles_visible = not self.epicycles.circles_visible
-            # elif event.key in (pygame.K_PLUS, pygame.K_KP_PLUS):
-            #     self.epicycles.speed_up()
-            # elif event.key in (pygame.K_MINUS, pygame.K_KP_MINUS):
-            #     self.epicycles.speed_down()
+            elif event.key in (pygame.K_PLUS, pygame.K_KP_PLUS):
+                self.epicycles.speed_up()
+            elif event.key in (pygame.K_MINUS, pygame.K_KP_MINUS):
+                self.epicycles.speed_down()
             # elif event.key == pygame.K_BACKSPACE:
             #     self.epicycles.erase_line()
             # elif event.key == pygame.K_f:
             #     self.epicycles.fade = not self.epicycles.fade
-            elif event.key == pygame.K_f1:
+            elif event.key == pygame.K_F1:
                 self.show_debug_overlay = not self.show_debug_overlay
 
     def update(self, dt):
@@ -52,15 +52,20 @@ class Show(scene.Scene):
 
         if self.paused:
             return
+        self.epicycles.update(dt)
 
     def update_debug_overlay(self):
         pass
 
     def draw(self):
         self.target_surface.fill(constants.BACKGROUND_COLOR)
-        # self.epicycles.draw(self.target_surface)
+        self.epicycles.draw(self.target_surface)
         if self.show_debug_overlay:
             pass
+
+        # DEBUG:
+        pygame.draw.circle(self.target_surface, (0, 0, 255), self.target_surface.get_rect().center, 1)
+
 
     def start(self):
         # Only relevant when coming from the Draw scene.
