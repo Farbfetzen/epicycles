@@ -2,7 +2,7 @@
 
 To run the app you must provide a path to a textfile containg the waypoints of the desired shape:
 ```
-python main.py paths/heart.txt
+python epicycles.py paths/heart.txt
 ```
 
 

@@ -7,7 +7,7 @@ import os
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame as pg
 
-from src.epicycles import Epicycles
+from src.epicycles_scene import Epicycles
 
 
 DEFAULT_WINDOW_WIDTH = 700
