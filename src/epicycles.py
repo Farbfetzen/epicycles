@@ -109,7 +109,7 @@ class Epicycles:
         # Transform:
         complex_points = [complex(*p) for p in points]
         transformed = list(numpy.fft.ifft(complex_points))
-        offset = pygame.Vector2(self.from_complex(transformed.pop(0))) * -1
+        offset = pygame.Vector2(self.complex_to_vec2(transformed.pop(0))) * -1
         harmonics = []
         i = 1
         increase_i = False
@@ -170,7 +170,7 @@ class Epicycles:
             )
 
         if self.circles_visible:
-            xy_points = [[int(xy) for xy in self.from_complex(i)]
+            xy_points = [[int(xy) for xy in self.complex_to_vec2(i)]
                          for i in self.circle_points]
             for i, r in enumerate(self.circle_radii):
                 pygame.draw.circle(
@@ -196,7 +196,7 @@ class Epicycles:
         for i, h in enumerate(self.harmonics):
             p = h[0] * math.e ** (h[1] * angle) + self.circle_points[i]
             self.circle_points[i + 1] = p
-        return self.from_complex(self.circle_points[-1])
+        return self.complex_to_vec2(self.circle_points[-1])
 
     def interpolate(self, p1, p2, a1, a2):
         mean_angle = (a1 + a2) / 2
@@ -214,5 +214,5 @@ class Epicycles:
         self.speed = constants.SPEEDS[self.speed_index]
 
     @staticmethod
-    def from_complex(z):
+    def complex_to_vec2(z):
         return pygame.Vector2(z.real, z.imag)
