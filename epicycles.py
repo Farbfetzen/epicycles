@@ -1,108 +1,36 @@
 """Draw various intricate shapes by adding rotating circles."""
 
 import argparse
-import math
 import os
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
-import pygame as pg
 
-from src.epicycles_scene import Epicycles
-
-
-DEFAULT_WINDOW_WIDTH = 700
-DEFAULT_WINDOW_HEIGHT = 700
-FPS = 30
-DEFAULT_SCALE_FACTOR = 0.8
-
-
-class App:
-    def __init__(self, points_file, n, scale_factor, fade,
-                 reverse_rotation, start_paused, window_size):
-        os.environ["SDL_VIDEO_CENTERED"] = "1"
-        pg.init()
-        self.running = True
-        self.paused = start_paused
-        self.clock = None
-
-        self.window_width, self.window_height = window_size
-        display_info = pg.display.Info()
-        if DEFAULT_WINDOW_WIDTH >= display_info.current_w:
-            self.window_width = display_info.current_w - 200
-            self.window_height = self.window_width
-        if DEFAULT_WINDOW_HEIGHT >= display_info.current_h:
-            self.window_height = display_info.current_h - 200
-            self.window_width = self.window_height
-        self.main_surface = pg.display.set_mode(
-            (self.window_width, self.window_height)
-        )
-        pg.display.set_caption("Epicycles")
-
-        self.epicycles = Epicycles(self.window_width, self.window_height,
-                                   points_file, n, scale_factor, fade,
-                                   reverse_rotation)
-
-    def handle_input(self):
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                self.running = False
-            elif event.type == pg.KEYDOWN:
-                if event.key == pg.K_ESCAPE:
-                    self.running = False
-                elif event.key == pg.K_SPACE:
-                    self.paused = not self.paused
-                elif event.key == pg.K_c:
-                    self.epicycles.circles_visible = not self.epicycles.circles_visible
-                elif event.key in (pg.K_PLUS, pg.K_KP_PLUS):
-                    self.epicycles.speed_up()
-                elif event.key in (pg.K_MINUS, pg.K_KP_MINUS):
-                    self.epicycles.speed_down()
-                elif event.key == pg.K_BACKSPACE:
-                    self.epicycles.erase_line()
-                elif event.key == pg.K_f:
-                    self.epicycles.fade = not self.epicycles.fade
-                elif event.key == pg.K_d:
-                    debug_info = (
-                        f"\nangle: {round(self.epicycles.angle, 2)} rad" +
-                        f" ({round(math.degrees(self.epicycles.angle), 2)}°)" +
-                        f"\nspeed: {self.epicycles.speed} rad/s" +
-                        f"\nfps: {int(self.clock.get_fps())}"
-                    )
-                    print(debug_info)
-
-    def run(self):
-        self.clock = pg.time.Clock()
-        while self.running:
-            dt = self.clock.tick(FPS) / 1000  # seconds
-            self.handle_input()
-            if not self.paused:
-                self.epicycles.update(dt)
-            self.epicycles.draw(self.main_surface, self.paused)
-            pg.display.update()
+from src import scene_manager
+from src import constants
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "file",
-        help="Path to file containing the points of the shape."
+        help="Path to file containing the desired shape."
     )
     parser.add_argument(
         "-n",
         type=int,
-        help="Limit the maximum number of harmonics or circles.",
         metavar="<int>",
-        default=None
+        help="Limit the maximum number of harmonics or circles.",
+        default=0
     )
     parser.add_argument(
         "-s",
-        "--scale_factor",
+        "--scale",
         type=float,
         metavar="<float>",
         help="A number > 0 and <= 1 indicating how much of the width and " +
              "height of the window the shape should occupy. To disable " +
-             f"scaling set it to 0. Defaults to {DEFAULT_SCALE_FACTOR}.",
-        default=DEFAULT_SCALE_FACTOR
+             f"scaling set it to 0. Defaults to {constants.DEFAULT_SCALE_FACTOR}.",
+        default=constants.DEFAULT_SCALE_FACTOR
     )
     parser.add_argument(
         "-f",
@@ -124,18 +52,18 @@ if __name__ == "__main__":
         help="Start the app paused."
     )
     parser.add_argument(
-        "--window_size",
+        "--window-size",
         metavar=("<width>", "<height>"),
         nargs=2,
         type=int,
         help="Specify a custom window width and height in pixels.",
-        default=(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
+        default=constants.DEFAULT_WINDOW_SIZE
     )
     args = parser.parse_args()
-    app = App(
+    app = scene_manager.SceneManager(
         args.file,
         args.n,
-        args.scale_factor,
+        args.scale,
         args.fade,
         args.reverse,
         args.paused,
