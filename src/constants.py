@@ -6,8 +6,6 @@ PATH_COLOR = (255, 0, 0)
 BACKGROUND_COLOR = (255, 255, 255)
 CIRCLE_COLOR = (170, 170, 170)
 CIRCLE_LINE_COLOR = (60, 60, 60)
-CIRCLE_LINE_THICKNESS = 1
-PATH_LINE_THICKNESS = 3
 # Max. distance between two points before interpolation kicks in:
 MAX_DIST = 5
 MIN_SPEED = 1/16

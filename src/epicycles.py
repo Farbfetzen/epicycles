@@ -46,7 +46,8 @@ class Epicycles:
         self.circle_radii = []
         for h in self.harmonics:
             radius = int(abs(h[0]))
-            if radius >= constants.CIRCLE_LINE_THICKNESS:
+            # Only add circle if radius is large enough for it to be visible:
+            if radius >= 1:
                 self.circle_radii.append(radius)
         self.previous_point = ()
         self.point = self.get_new_point(self.angle)
@@ -133,16 +134,14 @@ class Epicycles:
                 target_surf,
                 constants.PATH_COLOR,
                 False,
-                self.interpolated_points,
-                constants.PATH_LINE_THICKNESS
+                self.interpolated_points
             )
         else:
             pygame.draw.line(
                 target_surf,
                 constants.PATH_COLOR,
                 self.previous_point,
-                self.point,
-                constants.PATH_LINE_THICKNESS
+                self.point
             )
 
         if self.circles_visible:
@@ -154,14 +153,13 @@ class Epicycles:
                     constants.CIRCLE_COLOR,
                     xy_points[i],
                     r,
-                    constants.CIRCLE_LINE_THICKNESS
+                    1
                 )
             pygame.draw.lines(
                 target_surf,
                 constants.CIRCLE_LINE_COLOR,
                 False,
-                xy_points,
-                constants.CIRCLE_LINE_THICKNESS
+                xy_points
             )
         pygame.transform.smoothscale(
             target_surf,
