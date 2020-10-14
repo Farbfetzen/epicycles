@@ -41,10 +41,10 @@ class Epicycles:
 
         # Setup circles and points:
         self.circle_points = [0j] * (len(self.harmonics) + 1)
-        self.circle_points[0] = self.to_complex((
-            window_width // 2 - int(offset[0]),
-            window_height // 2 - int(offset[1])
-        ))
+        self.circle_points[0] = complex(
+            target_surface_rect.centerx - int(offset.x),
+            target_surface_rect.centery - int(offset.y)
+        )
         self.circle_radii = []
         for h in self.harmonics:
             radius = int(abs(h[0]))
@@ -109,8 +109,7 @@ class Epicycles:
         # Transform:
         complex_points = [complex(*p) for p in points]
         transformed = list(numpy.fft.ifft(complex_points))
-        offset = pygame.Vector2(self.from_complex(transformed.pop(0)))
-        offset.y *= -1
+        offset = pygame.Vector2(self.from_complex(transformed.pop(0))) * -1
         harmonics = []
         i = 1
         increase_i = False
@@ -118,8 +117,8 @@ class Epicycles:
         pop_back = True  # pop from the front or the back
         while transformed:
             radius = transformed.pop(-pop_back)
-            # Only add circles over a certain size threshold to prevent
-            # spamming tiny circles or circles with radius 0:
+            # Only add harmonics over a certain radius threshold to ignore
+            # harmonics which don't noticeably contribute:
             if abs(radius) >= 0.1:
                 harmonics.append([radius, complex(0, sign * i)])
             if increase_i:
@@ -129,6 +128,30 @@ class Epicycles:
             pop_back = not pop_back
 
         return harmonics, offset
+
+    def update(self, dt):
+        self.previous_angle = self.angle
+        self.angle_increment = self.speed * dt
+        self.angle += self.angle_increment
+        self.previous_point = self.point
+        self.point = self.get_new_point(self.angle)
+
+        if self.previous_point.distance_to(self.point) > constants.MAX_DIST:
+            self.interpolated_points = (
+                    (self.previous_point,) +
+                    self.interpolate(
+                        self.previous_point,
+                        self.point,
+                        self.previous_angle,
+                        self.angle
+                    ) +
+                    (self.point,)
+            )
+        else:
+            self.interpolated_points = ()
+
+        if self.angle > math.tau:
+            self.angle -= math.tau
 
     def draw(self, target_surf):
         if self.interpolated_points:
@@ -169,10 +192,6 @@ class Epicycles:
             target_surf
         )
 
-    @staticmethod
-    def from_complex(z):
-        return pygame.Vector2(z.real, z.imag)
-
     def get_new_point(self, angle):
         for i, h in enumerate(self.harmonics):
             p = h[0] * math.e ** (h[1] * angle) + self.circle_points[i]
@@ -195,29 +214,5 @@ class Epicycles:
         self.speed = constants.SPEEDS[self.speed_index]
 
     @staticmethod
-    def to_complex(xy):
-        return complex(xy[0], xy[1])
-
-    def update(self, dt):
-        self.previous_angle = self.angle
-        self.angle_increment = self.speed * dt
-        self.angle += self.angle_increment
-        self.previous_point = self.point
-        self.point = self.get_new_point(self.angle)
-
-        if self.previous_point.distance_to(self.point) > constants.MAX_DIST:
-            self.interpolated_points = (
-                    (self.previous_point,) +
-                    self.interpolate(
-                        self.previous_point,
-                        self.point,
-                        self.previous_angle,
-                        self.angle
-                    ) +
-                    (self.point,)
-            )
-        else:
-            self.interpolated_points = ()
-
-        if self.angle > math.tau:
-            self.angle -= math.tau
+    def from_complex(z):
+        return pygame.Vector2(z.real, z.imag)
