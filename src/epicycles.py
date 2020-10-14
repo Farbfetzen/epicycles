@@ -14,127 +14,6 @@ from src import constants
 # c is the position of the circle center
 
 
-# failed attempt, too aggressive
-#
-# class Epicycles:
-#     def __init__(self,
-#                  filename,
-#                  n,
-#                  scale,
-#                  fade,
-#                  reverse,
-#                  target_surface_rect):
-# 
-#         self.fade = fade
-#         self.angle = 0  # angle in radians
-#         self.previous_angle = self.angle
-#         self.angle_increment = 0
-#         self.speed = 1  # speed of the innermost circle in rad/s
-#         self.circles_visible = True
-# 
-#         self.harmonics, offset = self.load_file(
-#             filename,
-#             scale,
-#             target_surface_rect
-#         )
-#         if n > 0:
-#             self.harmonics = self.harmonics[:n]
-# 
-#         self.circle_points = [0j] * (len(self.harmonics) + 1)
-#         self.circle_points[0] = complex(int(offset.x), int(offset.y))
-#         self.circle_radii = []
-#         for h in self.harmonics:
-#             radius = int(abs(h[0]))
-#             # Prevents circles that are too tiny to see:
-#             if radius >= 1:
-#                 self.circle_radii.append(radius)
-# 
-#         self.point = self.get_new_point(self.angle)
-#         self.previous_point = ()
-#         self.interpolated_points = ()
-# 
-#     def load_file(self, filename, scale, target_surface_rect):
-#         with open(filename, "r") as file:
-#             file_type = file.readline().strip()
-#             if file_type == "shape":
-#                 points = []
-#                 for line in file:
-#                     x, y = line.split()
-#                     # Use negative y because in pygame the origin is topleft.
-#                     p = pygame.Vector2(float(x), float(y))
-#                     points.append(p)
-#                 harmonics, offset = self.get_harmonics(
-#                     points,
-#                     scale,
-#                     target_surface_rect
-#                 )
-#             elif file_type == "harmonics":
-#                 # TODO: Implement this. Remember to scale these.
-#                 raise NotImplementedError("Harmonic files can not yet be read.")
-#             else:
-#                 raise ValueError(
-#                     "Unknown file type. First line in file must be either " +
-#                     "\"shape\" or \"harmonics\""
-#                 )
-#         return harmonics, offset
-# 
-#     def get_harmonics(self, points, scale_factor, target_surface_rect):
-#         # Center the shape around (0,0):
-#         max_x = max(points, key=lambda vec: vec.x).x
-#         min_x = min(points, key=lambda vec: vec.x).x
-#         max_y = max(points, key=lambda vec: vec.y).y
-#         min_y = min(points, key=lambda vec: vec.y).y
-#         center = pygame.Vector2(max_x - min_x, max_y - min_y)
-#         for p in points:
-#             p -= center
-# 
-#         # Scale the shape relative to scale factor and window size:
-#         if scale_factor < 0 or scale_factor > 1:
-#             raise ValueError("Argument \"--scale\" must be between 0 and 1.")
-#         if scale_factor != 0:
-#             max_allowed_x = scale_factor * target_surface_rect.centerx
-#             max_allowed_y = scale_factor * target_surface_rect.centery
-#             if max_allowed_x <= max_allowed_y:
-#                 ratio = max_allowed_x / (max_x - center.x)
-#             else:
-#                 ratio = max_allowed_y / (max_y - center.y)
-#             for p in points:
-#                 p *= ratio
-# 
-#         # Transform:
-#         complex_points = [complex(*p) for p in points]
-#         transformed = list(numpy.fft.ifft(complex_points))
-#         offset = pygame.Vector2(self.from_complex(transformed.pop(0)))
-#         harmonics = []
-#         i = 1
-#         increase_i = False
-#         sign = -1
-#         pop_back = True  # pop from the front or the back
-#         while transformed:
-#             radius = transformed.pop(-pop_back)
-#             # Only add circles over a certain size threshold to prevent
-#             # spamming tiny circles or circles with radius 0:
-#             if abs(radius) >= 0.1:
-#                 harmonics.append([radius, complex(0, sign * i)])
-#             if increase_i:
-#                 i += 1
-#             increase_i = not increase_i
-#             sign *= -1
-#             pop_back = not pop_back
-# 
-#         return harmonics, offset
-# 
-#     @staticmethod
-#     def from_complex(z):
-#         return pygame.Vector2(z.real, z.imag)
-#
-#     def get_new_point(self, angle):
-#         for i, h in enumerate(self.harmonics):
-#             self.circle_points[i + 1] = \
-#                 h[0] * math.e ** (h[1] * angle) + self.circle_points[i]
-#         return self.from_complex(self.circle_points[-1])
-
-
 class Epicycles:
     def __init__(self, filename, n,
                  scale, fade, reverse, target_surface_rect):
@@ -251,7 +130,6 @@ class Epicycles:
 
         return harmonics, offset
 
-
     def draw(self, target_surf):
         if self.interpolated_points:
             pygame.draw.lines(
@@ -296,7 +174,7 @@ class Epicycles:
 
     @staticmethod
     def from_complex(z):
-        return z.real, z.imag
+        return pygame.Vector2(z.real, z.imag)
 
     @staticmethod
     def get_dist(p1, p2):
