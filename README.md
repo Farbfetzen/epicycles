@@ -8,7 +8,7 @@ python epicycles.py paths/heart.txt
 ```
 
 
-#### optional command line arguments
+### optional command line arguments
 - **-h**, **--help**: Show a help message and exit.
 - **-n \<int>**: Limit the maximum number of harmonics or circles.
 - **-s**, **--scale_factor \<float>**: A number > 0 and <= 1 indicating how much of the width and height of the window the shape should occupy. To disable scaling set it to 0.
@@ -18,7 +18,7 @@ python epicycles.py paths/heart.txt
 - **--window_size \<width> \<height>**: Specify a custom window width and height in pixels.
 
 
-#### controls
+### controls
 - **Space**: Pause/unpause. 
 - **Backspace**: Erase the line.
 - **F**: Toggle line fading.
