@@ -19,6 +19,8 @@ DEFAULT_SCALE_FACTOR = 0.8
 class App:
     def __init__(self, points_file, n, scale_factor, fade,
                  reverse_rotation, start_paused, window_size):
+        os.environ["SDL_VIDEO_CENTERED"] = "1"
+        pg.init()
         self.running = True
         self.paused = start_paused
         self.clock = None
@@ -79,65 +81,64 @@ class App:
             pg.display.update()
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "file",
-    help="Path to file containing the points of the shape."
-)
-parser.add_argument(
-    "-n",
-    type=int,
-    help="Limit the maximum number of harmonics or circles.",
-    metavar="<int>",
-    default=None
-)
-parser.add_argument(
-    "-s",
-    "--scale_factor",
-    type=float,
-    metavar="<float>",
-    help="A number > 0 and <= 1 indicating how much of the width and " +
-         "height of the window the shape should occupy. To disable " +
-         f"scaling set it to 0. Defaults to {DEFAULT_SCALE_FACTOR}.",
-    default=DEFAULT_SCALE_FACTOR
-)
-parser.add_argument(
-    "-f",
-    "--fade",
-    action="store_true",
-    help="Fade the line over time so that it vanishes after one cycle."
-)
-parser.add_argument(
-    "-r",
-    "--reverse",
-    action="store_true",
-    help="Reverse the rotation direction of all circles " +
-         "causing the shape to be drawn counterclockwise."
-)
-parser.add_argument(
-    "-p",
-    "--paused",
-    action="store_true",
-    help="Start the app paused."
-)
-parser.add_argument(
-    "--window_size",
-    metavar=("<width>", "<height>"),
-    nargs=2,
-    type=int,
-    help="Specify a custom window width and height in pixels.",
-    default=(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
-)
-args = parser.parse_args()
-
-os.environ["SDL_VIDEO_CENTERED"] = "1"
-pg.init()
-App(
-    args.file,
-    args.n,
-    args.scale_factor,
-    args.fade,
-    args.reverse,
-    args.paused,
-    args.window_size
-).run()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "file",
+        help="Path to file containing the points of the shape."
+    )
+    parser.add_argument(
+        "-n",
+        type=int,
+        help="Limit the maximum number of harmonics or circles.",
+        metavar="<int>",
+        default=None
+    )
+    parser.add_argument(
+        "-s",
+        "--scale_factor",
+        type=float,
+        metavar="<float>",
+        help="A number > 0 and <= 1 indicating how much of the width and " +
+             "height of the window the shape should occupy. To disable " +
+             f"scaling set it to 0. Defaults to {DEFAULT_SCALE_FACTOR}.",
+        default=DEFAULT_SCALE_FACTOR
+    )
+    parser.add_argument(
+        "-f",
+        "--fade",
+        action="store_true",
+        help="Fade the line over time so that it vanishes after one cycle."
+    )
+    parser.add_argument(
+        "-r",
+        "--reverse",
+        action="store_true",
+        help="Reverse the rotation direction of all circles " +
+             "causing the shape to be drawn counterclockwise."
+    )
+    parser.add_argument(
+        "-p",
+        "--paused",
+        action="store_true",
+        help="Start the app paused."
+    )
+    parser.add_argument(
+        "--window_size",
+        metavar=("<width>", "<height>"),
+        nargs=2,
+        type=int,
+        help="Specify a custom window width and height in pixels.",
+        default=(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
+    )
+    args = parser.parse_args()
+    app = App(
+        args.file,
+        args.n,
+        args.scale_factor,
+        args.fade,
+        args.reverse,
+        args.paused,
+        args.window_size
+    )
+    app.run()
