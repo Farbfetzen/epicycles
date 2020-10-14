@@ -36,10 +36,6 @@ class Epicycles:
         )
         if n > 0:
             self.harmonics = self.harmonics[:n]
-        # Invert y-axis for pygame window:
-        for i, h in enumerate(self.harmonics):
-            z = h[0]
-            self.harmonics[i][0] = complex(z.real, z.imag * -1)
 
         # Setup circles and points:
         self.circle_points = [0j] * (len(self.harmonics) + 1)
@@ -64,7 +60,7 @@ class Epicycles:
                 for line in file:
                     x, y = line.split()
                     # Use negative y because in pygame the origin is topleft.
-                    p = pygame.Vector2(float(x), float(y))
+                    p = pygame.Vector2(float(x), -float(y))
                     points.append(p)
                 harmonics, offset = self.get_harmonics(
                     points,
@@ -111,10 +107,11 @@ class Epicycles:
         complex_points = [complex(*p) for p in points]
         transformed = list(numpy.fft.ifft(complex_points))
         offset = pygame.Vector2(self.from_complex(transformed.pop(0)))
+        offset.y *= -1
         harmonics = []
         i = 1
         increase_i = False
-        sign = -1
+        sign = 1
         pop_back = True  # pop from the front or the back
         while transformed:
             radius = transformed.pop(-pop_back)
