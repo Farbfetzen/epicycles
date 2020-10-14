@@ -5,6 +5,7 @@ To run the app you must provide a path to a textfile containg the waypoints of t
 python main.py paths/heart.txt
 ```
 
+
 #### optional command line arguments
 - **-h**, **--help**: Show a help message and exit.
 - **-n \<int>**: Limit the maximum number of harmonics or circles.
@@ -13,8 +14,6 @@ python main.py paths/heart.txt
 - **-r**, **--reverse**: Reverse the rotation direction of all circles causing the shape to be drawn counterclockwise.
 - **-p**, **--paused**: Start the app paused.
 - **--window_size \<width> \<height>**: Specify a custom window width and height in pixels.
-
-
 
 
 #### controls

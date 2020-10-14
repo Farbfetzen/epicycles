@@ -4,7 +4,7 @@ import argparse
 import math
 import os
 
-# os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame as pg
 
 from epicycles import Epicycles
@@ -47,7 +47,7 @@ class App:
             elif event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
                     self.running = False
-                elif event.key == pg.K_p or event.key == pg.K_SPACE:
+                elif event.key == pg.K_SPACE:
                     self.paused = not self.paused
                 elif event.key == pg.K_c:
                     self.epicycles.circles_visible = not self.epicycles.circles_visible
@@ -87,7 +87,7 @@ parser.add_argument(
 parser.add_argument(
     "-n",
     type=int,
-    help="Maximum number of harmonics or circles.",
+    help="Limit the maximum number of harmonics or circles.",
     metavar="<int>",
     default=None
 )
@@ -98,7 +98,7 @@ parser.add_argument(
     metavar="<float>",
     help="A number > 0 and <= 1 indicating how much of the width and " +
          "height of the window the shape should occupy. To disable " +
-         f"this set it to 0. Defaults to {DEFAULT_SCALE_FACTOR}.",
+         f"scaling set it to 0. Defaults to {DEFAULT_SCALE_FACTOR}.",
     default=DEFAULT_SCALE_FACTOR
 )
 parser.add_argument(
@@ -111,7 +111,8 @@ parser.add_argument(
     "-r",
     "--reverse",
     action="store_true",
-    help="Reverse the rotation direction of all circles."
+    help="Reverse the rotation direction of all circles " +
+         "causing the shape to be drawn counterclockwise."
 )
 parser.add_argument(
     "-p",
