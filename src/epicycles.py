@@ -159,7 +159,7 @@ class Epicycles:
                 )
             pygame.draw.lines(
                 target_surf,
-                constants.CIRCLE_LINE_COLOR,
+                constants.CIRCLE_COLOR,
                 False,
                 xy_points
             )
