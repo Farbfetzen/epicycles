@@ -1,5 +1,7 @@
 ## Drawing shapes with epicycles.
 
+Requires Python >= 3.6, PyGame 2 and NumPy.
+ 
 To run the app you must provide a path to a textfile containg the waypoints of the desired shape:
 ```
 python epicycles.py paths/heart.txt
