@@ -217,6 +217,10 @@ class Epicycles:
     def reverse_direction(self):
         self.angular_velocity *= -1
 
+    def erase_line(self):
+        self.points = self.points[-2:]
+        self.angles = self.angles[-2:]
+
     @staticmethod
     def complex_to_vec2(z):
         return pygame.Vector2(z.real, z.imag)
