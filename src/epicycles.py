@@ -18,7 +18,6 @@ class Epicycles:
         self.fade = fade
         self.angle = 0  # angle in radians
         self.previous_angle = self.angle
-        self.angle_increment = 0
 
         self.harmonics, offset = self.load_file(
             filename,
@@ -41,8 +40,9 @@ class Epicycles:
             if radius >= 1:
                 self.circle_radii.append(radius)
 
-        self.previous_point = ()
-        self.point = self.get_new_point(self.angle)
+        p = self.get_new_point(self.angle)
+        self.previous_point = p
+        self.point = p
         self.interpolated_points = ()
 
     def load_file(self, filename, scale, target_surface_rect):
@@ -120,8 +120,7 @@ class Epicycles:
 
     def update(self, dt):
         self.previous_angle = self.angle
-        self.angle_increment = self.speed * dt * self.direction
-        self.angle += self.angle_increment
+        self.angle += self.speed * dt * self.direction
         self.previous_point = self.point
         self.point = self.get_new_point(self.angle)
 

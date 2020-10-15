@@ -63,12 +63,8 @@ class Show(scene.Scene):
                 self.show_debug_overlay = not self.show_debug_overlay
 
     def update(self, dt):
-        if self.paused:
-            return
-        self.epicycles.update(dt)
-
-    def update_debug_overlay(self):
-        pass
+        if not self.paused:
+            self.epicycles.update(dt)
 
     def draw(self):
         self.target_surface.fill(constants.BACKGROUND_COLOR)
