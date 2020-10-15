@@ -77,23 +77,25 @@ class Show(scene.Scene):
                 self.debug_margin,
                 f"fps: {fps}"
             )
-            angle = self.epicycles.angles[-1]
             self.debug_font.render_to(
                 self.target_surface,
                 self.debug_margin + self.debug_line_spacing,
-                f"angle: {round(angle, 2):.2f} rad, " +
-                f"{round(math.degrees(angle), 2):.1f}°"
+                f"angle: {round(self.epicycles.angles[-1], 2):.2f} rad"
             )
             self.debug_font.render_to(
                 self.target_surface,
                 self.debug_margin + self.debug_line_spacing * 2,
-                f"angular velocity: {self.epicycles.angular_velocity} rad/s, " +
-                f"{round(math.degrees(self.epicycles.angular_velocity), 1)} °/s"
+                f"angular velocity: {self.epicycles.angular_velocity} rad/s"
             )
             self.debug_font.render_to(
                 self.target_surface,
                 self.debug_margin + self.debug_line_spacing * 3,
                 f"{len(self.epicycles.points)=}"
+            )
+            self.debug_font.render_to(
+                self.target_surface,
+                self.debug_margin + self.debug_line_spacing * 4,
+                f"{self.epicycles.angles[0]=:.4f}"
             )
 
     def start(self):

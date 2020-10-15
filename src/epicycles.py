@@ -15,6 +15,7 @@ class Epicycles:
         self.angular_velocity = constants.SPEEDS[self.speed_index]
         if reverse:
             self.angular_velocity *= -1
+        self.velocity_positive = self.angular_velocity > 0
         self.circles_visible = True
         self.fade = fade
 
@@ -151,6 +152,8 @@ class Epicycles:
         self.angles.append(next_angle)
         self.points.append(next_point)
 
+        self.trim_lists()
+
     def draw(self, target_surf):
         pygame.draw.aalines(
             target_surf,
@@ -193,6 +196,7 @@ class Epicycles:
         return self.complex_to_vec2(self.circle_centers[-1])
 
     def interpolate(self, p1, p2, a1, a2):
+        # FIXME: Why tuple? Append to list!
         mean_angle = (a1 + a2) / 2
         new_point = self.get_next_point(mean_angle)
         result = ()
@@ -202,6 +206,25 @@ class Epicycles:
         if new_point.distance_to(p2) > constants.MAX_DIST:
             result += self.interpolate(new_point, p2, mean_angle, a2)
         return result
+
+    def trim_lists(self):
+        """Keep the points and angles lists short by
+        removing redundant points.
+        """
+
+        # FIXME: Does not work around angle=0 because there it flips between 0 and 2pi.
+        # FIXME: Does not seem to work for negative rotation direction.
+        current_angle = self.angles[-1]
+        for i, angle in enumerate(self.angles):
+            if ((self.velocity_positive and angle > current_angle)
+                    or (not self.velocity_positive and angle < current_angle)):
+                break
+        else:
+            return
+        if i > 0:
+            print(f"{i=}, {angle=:.4f}, {current_angle=:.4f}")
+            self.points = self.points[i:]
+            self.angles = self.angles[i:]
 
     def increase_speed(self):
         self.speed_index = min(self.speed_index + 1, len(constants.SPEEDS) - 1)
@@ -219,6 +242,7 @@ class Epicycles:
 
     def reverse_direction(self):
         self.angular_velocity *= -1
+        self.velocity_positive = not self.velocity_positive
         # Trim the point and angle lists here, otherwise there is a
         # possibility for them to become too long which may slow down the app.
         self.erase_line()
