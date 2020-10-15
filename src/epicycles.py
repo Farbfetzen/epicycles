@@ -205,8 +205,12 @@ class Epicycles:
             result += self.interpolate(new_point, p2, mean_angle, a2)
         return result
 
-    def change_speed(self, s):
-        self.speed_index = min(max(self.speed_index + s, 0), len(constants.SPEEDS) - 1)
+    def increase_speed(self):
+        self.speed_index = min(self.speed_index + 1, len(constants.SPEEDS) - 1)
+        self.speed = constants.SPEEDS[self.speed_index]
+
+    def decrease_speed(self):
+        self.speed_index = max(self.speed_index - 1, 0)
         self.speed = constants.SPEEDS[self.speed_index]
 
     @staticmethod
