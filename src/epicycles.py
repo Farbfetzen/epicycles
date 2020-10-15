@@ -13,7 +13,8 @@ class Epicycles:
         self.speed_index = 3
         # speed of the innermost circle in radians/second-
         self.speed = constants.SPEEDS[self.speed_index]
-        self.direction = -1 if reverse else 1
+        if reverse:
+            self.speed *= -1
         self.circles_visible = True
         self.fade = fade
         self.angle = 0  # angle in radians
@@ -120,7 +121,7 @@ class Epicycles:
 
     def update(self, dt):
         self.previous_angle = self.angle
-        self.angle += self.speed * dt * self.direction
+        self.angle += self.speed * dt
         self.previous_point = self.point
         self.point = self.get_new_point(self.angle)
 
@@ -205,16 +206,15 @@ class Epicycles:
 
     def increase_speed(self):
         self.speed_index = min(self.speed_index + 1, len(constants.SPEEDS) - 1)
-        self.speed = constants.SPEEDS[self.speed_index]
+        self.speed = math.copysign(constants.SPEEDS[self.speed_index], self.speed)
 
     def decrease_speed(self):
         self.speed_index = max(self.speed_index - 1, 0)
-        self.speed = constants.SPEEDS[self.speed_index]
+        self.speed = math.copysign(constants.SPEEDS[self.speed_index], self.speed)
 
     def reverse_direction(self):
-        self.direction = -1 if self.direction == 1 else 1
+        self.speed *= -1
 
     @staticmethod
     def complex_to_vec2(z):
         return pygame.Vector2(z.real, z.imag)
-
