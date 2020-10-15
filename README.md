@@ -13,7 +13,7 @@ python epicycles.py shapes/heart.txt
 - **-n \<int>**: Limit the maximum number of harmonics or circles.
 - **-s**, **--scale \<float>**: A number > 0 and <= 1 indicating how much of the width and height of the window the shape should occupy. To disable scaling set it to 0.
 - **-f**, **--fade**: Fade the line over time so that it vanishes after one cycle.
-- **-r**, **--reverse**: Reverse the rotation direction of all circles causing the shape to be drawn counterclockwise.
+- **-r**, **--reverse**: Reverse the rotation direction.
 - **-p**, **--paused**: Start the app paused.
 - **--window-size \<width> \<height>**: Specify a custom window width and height in pixels.
 
@@ -25,4 +25,5 @@ python epicycles.py shapes/heart.txt
 - **C**: Toggle visibility of the circles.
 - **+**: Increase speed.
 - **-**: Decrease speed.
+- **R**: Reverse rotation.
 - **ESC**: Quit.

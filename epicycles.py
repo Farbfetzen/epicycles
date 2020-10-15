@@ -42,8 +42,7 @@ if __name__ == "__main__":
         "-r",
         "--reverse",
         action="store_true",
-        help="Reverse the rotation direction of all circles " +
-             "causing the shape to be drawn counterclockwise."
+        help="Reverse the rotation direction."
     )
     parser.add_argument(
         "-p",

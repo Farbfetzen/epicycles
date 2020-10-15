@@ -39,6 +39,8 @@ class Show(scene.Scene):
                 self.epicycles.increase_speed()
             elif event.key in (pygame.K_MINUS, pygame.K_KP_MINUS):
                 self.epicycles.decrease_speed()
+            elif event.key == pygame.K_r:
+                self.epicycles.reverse_direction()
             # elif event.key == pygame.K_BACKSPACE:
             #     self.epicycles.erase_line()
             # elif event.key == pygame.K_f:
