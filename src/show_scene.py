@@ -49,9 +49,9 @@ class Show(scene.Scene):
                 self.paused = not self.paused
             elif event.key == pygame.K_c:
                 self.epicycles.circles_visible = not self.epicycles.circles_visible
-            elif event.key in (pygame.K_PLUS, pygame.K_KP_PLUS):
+            elif event.key == pygame.K_PLUS or event.key == pygame.K_KP_PLUS:
                 self.epicycles.increase_speed()
-            elif event.key in (pygame.K_MINUS, pygame.K_KP_MINUS):
+            elif event.key == pygame.K_MINUS or event.key == pygame.K_KP_MINUS:
                 self.epicycles.decrease_speed()
             elif event.key == pygame.K_r:
                 self.epicycles.reverse_direction()
