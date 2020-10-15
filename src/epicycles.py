@@ -12,9 +12,9 @@ class Epicycles:
                  scale, fade, reverse, target_surface_rect):
         self.speed_index = 3
         # speed of the innermost circle in radians/second-
-        self.speed = constants.SPEEDS[self.speed_index]
+        self.angular_velocity = constants.SPEEDS[self.speed_index]
         if reverse:
-            self.speed *= -1
+            self.angular_velocity *= -1
         self.circles_visible = True
         self.fade = fade
         self.angle = 0  # angle in radians
@@ -121,7 +121,7 @@ class Epicycles:
 
     def update(self, dt):
         self.previous_angle = self.angle
-        self.angle += self.speed * dt
+        self.angle += self.angular_velocity * dt
         self.previous_point = self.point
         self.point = self.get_new_point(self.angle)
 
@@ -206,14 +206,20 @@ class Epicycles:
 
     def increase_speed(self):
         self.speed_index = min(self.speed_index + 1, len(constants.SPEEDS) - 1)
-        self.speed = math.copysign(constants.SPEEDS[self.speed_index], self.speed)
+        self.angular_velocity = math.copysign(
+            constants.SPEEDS[self.speed_index],
+            self.angular_velocity
+        )
 
     def decrease_speed(self):
         self.speed_index = max(self.speed_index - 1, 0)
-        self.speed = math.copysign(constants.SPEEDS[self.speed_index], self.speed)
+        self.angular_velocity = math.copysign(
+            constants.SPEEDS[self.speed_index],
+            self.angular_velocity
+        )
 
     def reverse_direction(self):
-        self.speed *= -1
+        self.angular_velocity *= -1
 
     @staticmethod
     def complex_to_vec2(z):

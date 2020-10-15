@@ -86,8 +86,8 @@ class Show(scene.Scene):
             self.debug_font.render_to(
                 self.target_surface,
                 self.debug_margin + self.debug_line_spacing * 2,
-                f"angular speed: {self.epicycles.speed} rad/s, " +
-                f"{round(math.degrees(self.epicycles.speed), 1)} °/s"
+                f"angular velocity: {self.epicycles.angular_velocity} rad/s, " +
+                f"{round(math.degrees(self.epicycles.angular_velocity), 1)} °/s"
             )
 
     def start(self):
