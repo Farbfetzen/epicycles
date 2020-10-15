@@ -2,16 +2,9 @@ import math
 import numpy.fft
 
 import pygame
+import pygame.gfxdraw
 
 from src import constants
-
-
-# This is the formula:
-# a * exp(bj * t) + c
-# a is the start position, abs(a) is the circle radius
-# b is the speed and direction of the rotation (negative values rotate anticlockwise)
-# j is sqrt(-1), usually denoted "i" in math and physics
-# c is the position of the circle center
 
 
 class Epicycles:
@@ -30,7 +23,6 @@ class Epicycles:
         self.window_width = window_width
         self.window_height = window_height
 
-        # Setup harmonics:
         self.harmonics, offset = self.load_file(
             filename,
             scale,
@@ -39,7 +31,6 @@ class Epicycles:
         if n > 0:
             self.harmonics = self.harmonics[:n]
 
-        # Setup circles and points:
         self.circle_centers = [0j] * (len(self.harmonics) + 1)
         self.circle_centers[0] = complex(
             target_surface_rect.centerx - int(offset.x),
@@ -48,9 +39,11 @@ class Epicycles:
         self.circle_radii = []
         for h in self.harmonics:
             radius = int(abs(h[0]))
-            # Only add circle if radius is large enough for it to be visible:
+            # Only add circle if radius is large enough for it to be visible.
+            # Make it int because gfxdraw needs integer arguments.
             if radius >= 1:
                 self.circle_radii.append(radius)
+
         self.previous_point = ()
         self.point = self.get_new_point(self.angle)
         self.interpolated_points = ()
@@ -63,9 +56,8 @@ class Epicycles:
                 for line in file:
                     x, y = line.split()
                     # Use negative y because in pygame the origin is topleft.
-                    p = pygame.Vector2(float(x), -float(y))
-                    points.append(p)
-                harmonics, offset = self.get_harmonics(
+                    points.append(pygame.Vector2(float(x), -float(y)))
+                harmonics, offset = self.transform_coordinates(
                     points,
                     scale,
                     target_surface_rect
@@ -80,7 +72,7 @@ class Epicycles:
                 )
         return harmonics, offset
 
-    def get_harmonics(self, points, scale_factor, target_surface_rect):
+    def transform_coordinates(self, points, scale_factor, target_surface_rect):
         # Center the shape around (0,0):
         max_x = max(points, key=lambda vec: vec.x).x
         min_x = min(points, key=lambda vec: vec.x).x
@@ -170,15 +162,16 @@ class Epicycles:
             )
 
         if self.circles_visible:
-            centers = [[int(xy) for xy in self.complex_to_vec2(i)]
-                       for i in self.circle_centers]
-            for i, r in enumerate(self.circle_radii):
-                pygame.draw.circle(
+            # Integer centers because gfxdraw needs integer coordinates
+            centers = [[int(p) for p in self.complex_to_vec2(cc)]
+                       for cc in self.circle_centers]
+            for center, radius in zip(centers, self.circle_radii):
+                pygame.gfxdraw.aacircle(
                     target_surf,
-                    constants.CIRCLE_COLOR,
-                    centers[i],
-                    r,
-                    1
+                    center[0],
+                    center[1],
+                    int(radius),
+                    constants.CIRCLE_COLOR
                 )
             pygame.draw.aalines(
                 target_surf,
@@ -186,13 +179,16 @@ class Epicycles:
                 False,
                 centers
             )
-        pygame.transform.smoothscale(
-            target_surf,
-            (self.window_width, self.window_height),
-            target_surf
-        )
 
     def get_new_point(self, angle):
+        # This is the formula:
+        # a * exp(bj * t) + c
+        # a is the amplitude (circle radius)
+        # b is the angular velocity (negative values rotate anticlockwise)
+        # j is sqrt(-1), usually denoted "i" in math and physics
+        # t is the current angle
+        # c is the position of the circle center
+
         for i, h in enumerate(self.harmonics):
             p = h[0] * math.e ** (h[1] * angle) + self.circle_centers[i]
             self.circle_centers[i + 1] = p
