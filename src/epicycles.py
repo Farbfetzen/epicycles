@@ -14,7 +14,6 @@ class Epicycles:
         # speed of the innermost circle in radians/second-
         self.speed = constants.SPEEDS[self.speed_index]
         self.direction = -1 if reverse else 1
-        print(self.direction)
         self.circles_visible = True
         self.fade = fade
         self.angle = 0  # angle in radians
@@ -184,7 +183,7 @@ class Epicycles:
         # This is the formula:
         # a * exp(bj * t) + c
         # a is the amplitude (circle radius)
-        # b is the angular velocity (negative values rotate anticlockwise)
+        # b is the angular speed (negative values rotate anticlockwise)
         # j is sqrt(-1), usually denoted "i" in math and physics
         # t is the current angle
         # c is the position of the circle center

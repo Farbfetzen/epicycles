@@ -28,13 +28,12 @@ class Show(scene.Scene):
             reverse=reverse,
             target_surface_rect=self.target_surface.get_rect()
         )
-
         self.debug_font = pygame.freetype.SysFont(
             "consolas, inconsolate, monospace",
             18
         )
         self.debug_font.pad = True
-        # Invert background color
+        # Text color is inverted background color:
         self.debug_font.fgcolor = [(255 - c) % 256 for c in constants.BACKGROUND_COLOR]
         self.debug_line_spacing = pygame.Vector2(
             0, self.debug_font.get_sized_height()
@@ -74,18 +73,25 @@ class Show(scene.Scene):
     def draw(self):
         self.target_surface.fill(constants.BACKGROUND_COLOR)
         self.epicycles.draw(self.target_surface)
+
         if self.show_debug_overlay:
             fps = int(self.scene_manager.clock.get_fps())
             self.debug_font.render_to(
                 self.target_surface,
                 self.debug_margin,
-                f"FPS: {fps}"
+                f"fps: {fps}"
             )
             self.debug_font.render_to(
                 self.target_surface,
                 self.debug_margin + self.debug_line_spacing,
-                f"Angle: {round(self.epicycles.angle, 2):.2f} rad, " +
+                f"angle: {round(self.epicycles.angle, 2):.2f} rad, " +
                 f"{round(math.degrees(self.epicycles.angle), 2):.1f}°"
+            )
+            self.debug_font.render_to(
+                self.target_surface,
+                self.debug_margin + self.debug_line_spacing * 2,
+                f"angular speed: {self.epicycles.speed} rad/s, " +
+                f"{round(math.degrees(self.epicycles.speed), 1)} °/s"
             )
 
     def start(self):
