@@ -141,8 +141,10 @@ class Epicycles:
         # else:
         #     self.interpolated_points = ()
 
-        # Must be done after the interpolation or the
-        # interpolation will not work.
+        self.trim_lists(next_angle)
+
+        # Must be done after the interpolation and list trimming
+        # or else those won't work.
         if next_angle >= math.tau:
             next_angle -= math.tau
         elif next_angle < 0:
@@ -151,8 +153,6 @@ class Epicycles:
         # TODO: append the interpolated list instead
         self.angles.append(next_angle)
         self.points.append(next_point)
-
-        self.trim_lists()
 
     def draw(self, target_surf):
         pygame.draw.aalines(
@@ -207,22 +207,23 @@ class Epicycles:
             result += self.interpolate(new_point, p2, mean_angle, a2)
         return result
 
-    def trim_lists(self):
+    def trim_lists(self, next_angle):
         """Keep the points and angles lists short by
         removing redundant points.
         """
-
         # FIXME: Does not work around angle=0 because there it flips between 0 and 2pi.
         # FIXME: Does not seem to work for negative rotation direction.
-        current_angle = self.angles[-1]
+
+        # Maybe have a special condition for when next_angle is > 2pi.
+
         for i, angle in enumerate(self.angles):
-            if ((self.velocity_positive and angle > current_angle)
-                    or (not self.velocity_positive and angle < current_angle)):
+            if ((self.velocity_positive and angle > next_angle)
+                    or (not self.velocity_positive and angle < next_angle)):
                 break
         else:
             return
         if i > 0:
-            print(f"{i=}, {angle=:.4f}, {current_angle=:.4f}")
+            #print(f"{i=}, {angle=:.4f}, {next_angle=:.4f}")
             self.points = self.points[i:]
             self.angles = self.angles[i:]
 
