@@ -216,8 +216,12 @@ class Epicycles:
 
     def reverse_direction(self):
         self.angular_velocity *= -1
+        # Trim the point and angle lists here, otherwise there is a
+        # possibility for them to become too long which may slow down the app.
+        self.erase_line()
 
     def erase_line(self):
+        # Keep the last two points so the draw functions don't complain.
         self.points = self.points[-2:]
         self.angles = self.angles[-2:]
 
