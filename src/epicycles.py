@@ -52,7 +52,8 @@ class Epicycles:
                 points = []
                 for line in file:
                     x, y = line.split()
-                    # Use negative y because in pygame the origin is topleft.
+                    # Flip the image by negating y because in pygame y=0
+                    # is at the top.
                     points.append(pygame.Vector2(float(x), -float(y)))
                 harmonics, offset = self.transform_coordinates(
                     points,
@@ -70,6 +71,8 @@ class Epicycles:
         return harmonics, offset
 
     def transform_coordinates(self, points, scale_factor, target_surface_rect):
+        # TODO: Break this up into three methods.
+
         # Center the shape around (0, 0):
         max_x = max(points, key=lambda vec: vec.x).x
         min_x = min(points, key=lambda vec: vec.x).x
@@ -102,8 +105,8 @@ class Epicycles:
         harmonics = []
         i = 1
         increase_i = False
-        sign = 1
-        pop_back = True  # pop from the front or the back
+        sign = -1
+        pop_back = False  # pop from the front or the back
         while transformed:
             radius = transformed.pop(-pop_back)
             # Only add harmonics over a certain radius threshold to ignore
