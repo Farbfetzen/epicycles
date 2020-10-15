@@ -142,6 +142,8 @@ class Epicycles:
 
         if self.angle > math.tau:
             self.angle -= math.tau
+        elif self.angle < 0:
+            self.angle += math.tau
 
     def draw(self, target_surf):
         if self.interpolated_points:
