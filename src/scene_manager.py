@@ -1,4 +1,5 @@
 import pygame
+import pygame.freetype
 
 from src import constants
 from src import show_scene

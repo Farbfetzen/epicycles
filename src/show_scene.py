@@ -1,4 +1,7 @@
+import math
+
 import pygame
+import pygame.freetype
 
 from src import constants
 from src import scene
@@ -26,6 +29,18 @@ class Show(scene.Scene):
             target_surface_rect=self.target_surface.get_rect()
         )
 
+        self.debug_font = pygame.freetype.SysFont(
+            "consolas, inconsolate, monospace",
+            18
+        )
+        self.debug_font.pad = True
+        # Invert background color
+        self.debug_font.fgcolor = [(255 - c) % 256 for c in constants.BACKGROUND_COLOR]
+        self.debug_line_spacing = pygame.Vector2(
+            0, self.debug_font.get_sized_height()
+        )
+        self.debug_margin = pygame.Vector2(5, 5)
+
     def process_event(self, event):
         done = super().process_event(event)
         if done:
@@ -49,9 +64,6 @@ class Show(scene.Scene):
                 self.show_debug_overlay = not self.show_debug_overlay
 
     def update(self, dt):
-        if self.show_debug_overlay:
-            self.update_debug_overlay()
-
         if self.paused:
             return
         self.epicycles.update(dt)
@@ -63,7 +75,18 @@ class Show(scene.Scene):
         self.target_surface.fill(constants.BACKGROUND_COLOR)
         self.epicycles.draw(self.target_surface)
         if self.show_debug_overlay:
-            pass
+            fps = int(self.scene_manager.clock.get_fps())
+            self.debug_font.render_to(
+                self.target_surface,
+                self.debug_margin,
+                f"FPS: {fps}"
+            )
+            self.debug_font.render_to(
+                self.target_surface,
+                self.debug_margin + self.debug_line_spacing,
+                f"Angle: {round(self.epicycles.angle, 2):.2f} rad, " +
+                f"{round(math.degrees(self.epicycles.angle), 2):.1f}°"
+            )
 
     def start(self):
         # Only relevant when coming from the Draw scene.
