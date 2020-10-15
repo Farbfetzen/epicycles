@@ -17,8 +17,6 @@ class Epicycles:
             self.angular_velocity *= -1
         self.circles_visible = True
         self.fade = fade
-        self.angle = 0  # angle in radians
-        self.previous_angle = self.angle
 
         self.harmonics, offset = self.load_file(
             filename,
@@ -41,10 +39,11 @@ class Epicycles:
             if radius >= 1:
                 self.circle_radii.append(radius)
 
-        p = self.get_new_point(self.angle)
-        self.previous_point = p
-        self.point = p
-        self.interpolated_points = ()
+        # Add the points twice so the line draw functions don't complain when
+        # the app is started in the paused state.
+        p = self.get_next_point(0)
+        self.points = [p, p]
+        self.angles = [0, 0]  # angles in radians
 
     def load_file(self, filename, scale, target_surface_rect):
         with open(filename, "r") as file:
@@ -71,7 +70,7 @@ class Epicycles:
         return harmonics, offset
 
     def transform_coordinates(self, points, scale_factor, target_surface_rect):
-        # Center the shape around (0,0):
+        # Center the shape around (0, 0):
         max_x = max(points, key=lambda vec: vec.x).x
         min_x = min(points, key=lambda vec: vec.x).x
         max_y = max(points, key=lambda vec: vec.y).y
@@ -108,7 +107,7 @@ class Epicycles:
         while transformed:
             radius = transformed.pop(-pop_back)
             # Only add harmonics over a certain radius threshold to ignore
-            # harmonics which don't noticeably contribute:
+            # harmonics which don't noticeably contribute.
             if abs(radius) >= 0.1:
                 harmonics.append([radius, complex(0, sign * i)])
             if increase_i:
@@ -120,48 +119,45 @@ class Epicycles:
         return harmonics, offset
 
     def update(self, dt):
-        self.previous_angle = self.angle
-        self.angle += self.angular_velocity * dt
-        self.previous_point = self.point
-        self.point = self.get_new_point(self.angle)
+        next_angle = self.angles[-1] + self.angular_velocity * dt
+        next_point = self.get_next_point(next_angle)
 
-        if self.previous_point.distance_to(self.point) > constants.MAX_DIST:
-            self.interpolated_points = (
-                    (self.previous_point,) +
-                    self.interpolate(
-                        self.previous_point,
-                        self.point,
-                        self.previous_angle,
-                        self.angle
-                    ) +
-                    (self.point,)
-            )
-        else:
-            self.interpolated_points = ()
+        # TODO: re-enable interpolation later
+        # if self.previous_point.distance_to(self.point) > constants.MAX_DIST:
+        #     self.interpolated_points = (
+        #             (self.previous_point,) +
+        #             self.interpolate(
+        #                 self.previous_point,
+        #                 self.point,
+        #                 self.previous_angle,
+        #                 self.angle
+        #             ) +
+        #             (self.point,)
+        #     )
+        # else:
+        #     self.interpolated_points = ()
 
-        if self.angle > math.tau:
-            self.angle -= math.tau
-        elif self.angle < 0:
-            self.angle += math.tau
+        # Must be done after the interpolation or the
+        # interpolation will not work.
+        if next_angle >= math.tau:
+            next_angle -= math.tau
+        elif next_angle < 0:
+            next_angle += math.tau
+
+        # TODO: append the interpolated list instead
+        self.angles.append(next_angle)
+        self.points.append(next_point)
 
     def draw(self, target_surf):
-        if self.interpolated_points:
-            pygame.draw.lines(
-                target_surf,
-                constants.PATH_COLOR,
-                False,
-                self.interpolated_points
-            )
-        else:
-            pygame.draw.line(
-                target_surf,
-                constants.PATH_COLOR,
-                self.previous_point,
-                self.point
-            )
+        pygame.draw.aalines(
+            target_surf,
+            constants.PATH_COLOR,
+            False,
+            self.points
+        )
 
         if self.circles_visible:
-            # Integer centers because gfxdraw needs integer coordinates
+            # Integer centers because gfxdraw needs integer coordinates.
             centers = [[int(p) for p in self.complex_to_vec2(cc)]
                        for cc in self.circle_centers]
             for center, radius in zip(centers, self.circle_radii):
@@ -179,7 +175,7 @@ class Epicycles:
                 centers
             )
 
-    def get_new_point(self, angle):
+    def get_next_point(self, angle):
         # This is the formula:
         # a * exp(bj * t) + c
         # a is the amplitude (circle radius)
@@ -189,13 +185,13 @@ class Epicycles:
         # c is the position of the circle center
 
         for i, h in enumerate(self.harmonics):
-            p = h[0] * math.e ** (h[1] * angle) + self.circle_centers[i]
-            self.circle_centers[i + 1] = p
+            self.circle_centers[i + 1] = \
+                h[0] * math.e ** (h[1] * angle) + self.circle_centers[i]
         return self.complex_to_vec2(self.circle_centers[-1])
 
     def interpolate(self, p1, p2, a1, a2):
         mean_angle = (a1 + a2) / 2
-        new_point = self.get_new_point(mean_angle)
+        new_point = self.get_next_point(mean_angle)
         result = ()
         if p1.distance_to(new_point) > constants.MAX_DIST:
             result += self.interpolate(p1, new_point, a1, mean_angle)
