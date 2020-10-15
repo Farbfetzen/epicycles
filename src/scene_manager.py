@@ -33,10 +33,13 @@ class SceneManager:
         self.active_scene.start()
 
     def run(self):
+        # Prevent the first dt from getting too large due to file loading etc.
+        self.clock.tick()
+
         while self.running:
             # Protect against hiccups (e.g. from moving the pygame window)
-            # by limiting to 100 milliseconds.
-            dt = min(self.clock.tick(constants.FPS), 100) / 1000
+            # by setting the lower limit to 33 milliseconds (30 FPS).
+            dt = min(self.clock.tick(constants.FPS), 33) / 1000
             for event in pygame.event.get():
                 self.active_scene.process_event(event)
             self.active_scene.update(dt)
