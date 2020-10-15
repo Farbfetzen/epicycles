@@ -10,7 +10,6 @@ from src import constants
 class Epicycles:
     def __init__(self, filename, n,
                  scale, fade, reverse, target_surface_rect):
-        window_width, window_height = target_surface_rect.size
         self.speed_index = 3
         # speed of the innermost circle in radians/second-
         self.speed = constants.SPEEDS[self.speed_index]
@@ -19,9 +18,6 @@ class Epicycles:
         self.angle = 0  # angle in radians
         self.previous_angle = self.angle
         self.angle_increment = 0
-
-        self.window_width = window_width
-        self.window_height = window_height
 
         self.harmonics, offset = self.load_file(
             filename,
