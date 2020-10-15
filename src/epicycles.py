@@ -40,8 +40,8 @@ class Epicycles:
             self.harmonics = self.harmonics[:n]
 
         # Setup circles and points:
-        self.circle_points = [0j] * (len(self.harmonics) + 1)
-        self.circle_points[0] = complex(
+        self.circle_centers = [0j] * (len(self.harmonics) + 1)
+        self.circle_centers[0] = complex(
             target_surface_rect.centerx - int(offset.x),
             target_surface_rect.centery - int(offset.y)
         )
@@ -170,21 +170,21 @@ class Epicycles:
             )
 
         if self.circles_visible:
-            xy_points = [[int(xy) for xy in self.complex_to_vec2(i)]
-                         for i in self.circle_points]
+            centers = [[int(xy) for xy in self.complex_to_vec2(i)]
+                       for i in self.circle_centers]
             for i, r in enumerate(self.circle_radii):
                 pygame.draw.circle(
                     target_surf,
                     constants.CIRCLE_COLOR,
-                    xy_points[i],
+                    centers[i],
                     r,
                     1
                 )
-            pygame.draw.lines(
+            pygame.draw.aalines(
                 target_surf,
                 constants.CIRCLE_COLOR,
                 False,
-                xy_points
+                centers
             )
         pygame.transform.smoothscale(
             target_surf,
@@ -194,9 +194,9 @@ class Epicycles:
 
     def get_new_point(self, angle):
         for i, h in enumerate(self.harmonics):
-            p = h[0] * math.e ** (h[1] * angle) + self.circle_points[i]
-            self.circle_points[i + 1] = p
-        return self.complex_to_vec2(self.circle_points[-1])
+            p = h[0] * math.e ** (h[1] * angle) + self.circle_centers[i]
+            self.circle_centers[i + 1] = p
+        return self.complex_to_vec2(self.circle_centers[-1])
 
     def interpolate(self, p1, p2, a1, a2):
         mean_angle = (a1 + a2) / 2

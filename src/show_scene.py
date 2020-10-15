@@ -33,8 +33,8 @@ class Show(scene.Scene):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 self.paused = not self.paused
-            # elif event.key == pygame.K_c:
-            #     self.epicycles.circles_visible = not self.epicycles.circles_visible
+            elif event.key == pygame.K_c:
+                self.epicycles.circles_visible = not self.epicycles.circles_visible
             elif event.key in (pygame.K_PLUS, pygame.K_KP_PLUS):
                 self.epicycles.change_speed(1)
             elif event.key in (pygame.K_MINUS, pygame.K_KP_MINUS):
@@ -62,10 +62,6 @@ class Show(scene.Scene):
         self.epicycles.draw(self.target_surface)
         if self.show_debug_overlay:
             pass
-
-        # DEBUG:
-        r = self.target_surface.get_rect()
-        pygame.draw.circle(self.target_surface, (0, 0, 255), r.center, 1)
 
     def start(self):
         # Only relevant when coming from the Draw scene.
