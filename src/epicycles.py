@@ -43,7 +43,7 @@ class Epicycles:
         # the app is started in the paused state.
         self.angle = 0  # in radians
         self.angles = [self.angle, self.angle]
-        p = self.get_next_point(self.angle)
+        p = self.get_point_at_angle(self.angle)
         self.points = [p, p]
 
     def load_file(self, filename, scale, target_surface_rect):
@@ -125,32 +125,31 @@ class Epicycles:
     def update(self, dt):
         self.angle = self.angle + self.angular_velocity * dt
         previous_point = self.points[-1]
-        next_point = self.get_next_point(self.angle)
+        next_point = self.get_point_at_angle(self.angle)
         dist = previous_point.distance_to(next_point)
         if dist < 1:
             return
         elif dist > constants.MAX_DIST:
-            pass
-            # TODO: re-enable interpolation later
-            # if self.previous_point.distance_to(self.point) > constants.MAX_DIST:
-            #     self.interpolated_points = (
-            #             (self.previous_point,) +
-            #             self.interpolate(
-            #                 self.previous_point,
-            #                 self.point,
-            #                 self.previous_angle,
-            #                 self.angle
-            #             ) +
-            #             (self.point,)
-            #     )
-            # else:
-            #     self.interpolated_points = ()
+            interpolated_points, interpolated_angles = self.interpolate(
+                        previous_point,
+                        next_point,
+                        self.angles[-1],
+                        self.angle
+                    )
+            for angle in reversed(interpolated_angles):
+                if 0 <= angle < math.tau:
+                    break
+                angle %= math.tau
+            new_points = interpolated_points.append(next_point)
+            new_angles = interpolated_angles.append(self.angle)
+        else:
+            new_points = next_point
+            new_angles = self.angle
 
         self.trim()
 
-        # TODO: append the interpolated list instead
-        self.angles.append(self.angle)
-        self.points.append(next_point)
+        self.angles += new_angles
+        self.points += new_points
 
     def draw(self, target_surf):
         pygame.draw.aalines(
@@ -179,7 +178,7 @@ class Epicycles:
                 centers
             )
 
-    def get_next_point(self, angle):
+    def get_point_at_angle(self, angle):
         # This is the formula:
         # a * exp(bj * t) + c
         # a is the amplitude (circle radius)
@@ -194,22 +193,24 @@ class Epicycles:
         return self.complex_to_vec2(self.circle_centers[-1])
 
     def interpolate(self, p1, p2, a1, a2):
-        # FIXME: Why tuple? Add to list!
-        # ATTENTION: Special case around tau, when next angle > tau and the
-        #  previous angle < tau. Or vice versa when rotation the other
-        #  direction. Maybe it is good to do the interpolation before correcting
-        #  the angle and then correct all new angles afterwards if they
-        #  are < 0 or > tau. Just iterate from the end and stop when the angle
-        #  is in the allowed range.
+        """Add more points in between if two points are too far apart."""
         mean_angle = (a1 + a2) / 2
-        new_point = self.get_next_point(mean_angle)
-        result = ()
-        if p1.distance_to(new_point) > constants.MAX_DIST:
-            result += self.interpolate(p1, new_point, a1, mean_angle)
-        result += (new_point, )
-        if new_point.distance_to(p2) > constants.MAX_DIST:
-            result += self.interpolate(new_point, p2, mean_angle, a2)
-        return result
+        mean_point = self.get_point_at_angle(mean_angle)
+        result_points = []
+        result_angles = []
+        if p1.distance_to(mean_point) > constants.MAX_DIST:
+            interp_points, interp_angles = self.interpolate(p1, mean_point,
+                                                            a1, mean_angle)
+            result_points += interp_points
+            result_angles += interp_angles
+        result_points.append(mean_point)
+        result_angles.append(mean_angle)
+        if mean_point.distance_to(p2) > constants.MAX_DIST:
+            interp_points, interp_angles = self.interpolate(mean_point, p2,
+                                                            mean_angle, a2)
+            result_points += interp_points
+            result_angles += interp_angles
+        return result_points, result_angles
 
     def trim(self):
         """Keep the points and angles lists short by
