@@ -140,11 +140,7 @@ class Epicycles:
         # else:
         #     self.interpolated_points = ()
 
-        self.trim_lists(next_angle)
-
-        # Must be done after the interpolation and list trimming
-        # or else those won't work.
-        next_angle %= math.tau
+        next_angle = self.trim(next_angle)
 
         # TODO: append the interpolated list instead
         self.angles.append(next_angle)
@@ -203,25 +199,42 @@ class Epicycles:
             result += self.interpolate(new_point, p2, mean_angle, a2)
         return result
 
-    def trim_lists(self, next_angle):
+    def trim(self, next_angle):
         """Keep the points and angles lists short by
-        removing redundant points.
+        removing old points that are more than tau radians behind.
+        Also correct the angle so that it is always between 0 and tau.
         """
-        # FIXME: Does not work around angle=0 because there it flips between 0 and 2pi.
-        # FIXME: Does not seem to work for negative rotation direction.
+        # FIXME: Add cases for negative rotation direction
 
-        # Maybe have a special condition for when next_angle is > 2pi.
+        oldest_angle = self.angles[0]
+        if self.velocity_positive:
+            if oldest_angle < math.tau <= next_angle:
+                for i, angle in enumerate(self.angles):
+                    if angle < oldest_angle:
+                        self.angles = self.angles[i:]
+                        self.points = self.points[i:]
+                        break
+            next_angle %= math.tau
+            if self.angles[0] < next_angle:
+                for i, angle in enumerate(self.angles):
+                    if angle > next_angle:
+                        self.angles = self.angles[i:]
+                        self.points = self.points[i:]
+                        break
 
-        for i, angle in enumerate(self.angles):
-            if ((self.velocity_positive and angle > next_angle)
-                    or (not self.velocity_positive and angle < next_angle)):
-                break
-        else:
-            return
-        if i > 0:
-            #print(f"{i=}, {angle=:.4f}, {next_angle=:.4f}")
-            self.points = self.points[i:]
-            self.angles = self.angles[i:]
+        return next_angle
+
+
+        # for i, angle in enumerate(self.angles):
+        #     if ((self.velocity_positive and angle > next_angle)
+        #             or (not self.velocity_positive and angle < next_angle)):
+        #         break
+        # else:
+        #     return
+        # if i > 0:
+        #     #print(f"{i=}, {angle=:.4f}, {next_angle=:.4f}")
+        #     self.points = self.points[i:]
+        #     self.angles = self.angles[i:]
 
     def increase_speed(self):
         self.speed_index = min(self.speed_index + 1, len(constants.SPEEDS) - 1)
