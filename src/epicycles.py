@@ -1,4 +1,5 @@
 import math
+import cmath
 import numpy.fft
 
 import pygame
@@ -172,21 +173,16 @@ class Epicycles:
             )
 
     def get_point_at_angle(self, angle):
-        # I think profiling indicates that this function gets called a lot,
-        # especially when there is lots to interpolate (closed_hilbert). It may
-        # be a cause for the framerate issues. Is there a way to speed it up?
-
         # This is the formula:
-        # a * exp(bj * t) + c
+        # a * exp(b * t) + c
         # a is the amplitude (circle radius)
-        # b is the angular speed (negative values rotate anticlockwise)
-        # j is sqrt(-1), usually denoted "i" in math and physics
+        # b is the angular velocity (speed and direction)
         # t is the current angle
         # c is the position of the circle center
 
-        for i, h in enumerate(self.harmonics):
+        for i, (a, b) in enumerate(self.harmonics):
             self.circle_centers[i + 1] = \
-                h[0] * math.e ** (h[1] * angle) + self.circle_centers[i]
+                a * cmath.exp(b * angle) + self.circle_centers[i]
         return self.complex_to_vec2(self.circle_centers[-1])
 
     def interpolate(self, p1, p2, a1, a2):
