@@ -2,7 +2,7 @@ import pygame
 import pygame.freetype
 
 from src import constants
-from src import show_scene
+from src import scene_circles
 
 
 class SceneManager:
@@ -18,7 +18,7 @@ class SceneManager:
         #  making the first scene "Draw".
 
         self.scenes = {
-            "show": show_scene.Show(
+            "show": scene_circles.Circles(
                 self,
                 start_paused,
                 file,

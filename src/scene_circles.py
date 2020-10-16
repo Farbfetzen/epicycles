@@ -1,5 +1,3 @@
-import math
-
 import pygame
 import pygame.freetype
 
@@ -8,7 +6,7 @@ from src import scene
 from src import epicycles
 
 
-class Show(scene.Scene):
+class Circles(scene.Scene):
     def __init__(self,
                  scene_manager,
                  start_paused,
