@@ -18,27 +18,20 @@ class Epicycles:
         self.circles_visible = True
         self.fade = fade
 
-        self.harmonics, offset = self.load_file(
+        self.harmonics, self.circle_radii, offset = self.load_file(
             filename,
             scale,
             target_surface_rect
         )
         if n > 0:
             self.harmonics = self.harmonics[:n]
+            self.circle_radii = self.circle_radii[:n]
 
         self.circle_centers = [0j] * (len(self.harmonics) + 1)
         self.circle_centers[0] = complex(
-            target_surface_rect.centerx - int(offset.x),  # TODO int()???
-            target_surface_rect.centery - int(offset.y)   # TODO int()???
+            target_surface_rect.centerx - offset.x,
+            target_surface_rect.centery - offset.y
         )
-        self.circle_radii = []
-        for h in self.harmonics:
-            radius = int(abs(h[0]))
-            # Only add radius if the associated circle would be large enough
-            # to be visible. Make it int because gfxdraw needs integer
-            # arguments. This list is only used for drawing the circles.
-            if radius >= constants.CIRCLE_RADIUS_CUTOFF:
-                self.circle_radii.append(radius)
 
         # Add the points twice so the line draw functions don't complain when
         # the app is started in the paused state.
@@ -57,7 +50,7 @@ class Epicycles:
                     # Flip the image by negating y because in pygame y=0
                     # is at the top.
                     points.append(pygame.Vector2(float(x), -float(y)))
-                harmonics, offset = self.transform_coordinates(
+                harmonics, circle_radii, offset = self.transform_coordinates(
                     points,
                     scale,
                     target_surface_rect
@@ -70,11 +63,9 @@ class Epicycles:
                     "Unknown file type. First line in file must be either " +
                     "\"shape\" or \"harmonics\""
                 )
-        return harmonics, offset
+        return harmonics, circle_radii, offset
 
     def transform_coordinates(self, points, scale_factor, target_surface_rect):
-        # TODO: Break this up into three methods.
-
         # Center the shape around (0, 0):
         max_x = max(points, key=lambda vec: vec.x).x
         min_x = min(points, key=lambda vec: vec.x).x
@@ -105,23 +96,30 @@ class Epicycles:
         transformed = list(numpy.fft.ifft(complex_points))
         offset = pygame.Vector2(self.complex_to_vec2(transformed.pop(0))) * -1
         harmonics = []
+        circle_radii = []
         i = 1
         increase_i = False
         sign = -1
         pop_back = False  # pop from the front or the back
         while transformed:
             radius = transformed.pop(-pop_back)
+            abs_radius = abs(radius)
             # Only add harmonics over a certain radius threshold to ignore
             # harmonics which don't noticeably contribute.
-            if abs(radius) >= constants.HARMONICS_RADIUS_CUTOFF:
+            if abs_radius >= constants.HARMONICS_RADIUS_CUTOFF:
                 harmonics.append([radius, complex(0, sign * i)])
+            # Only add radius if the associated circle would be large enough
+            # to be visible. Make it int because gfxdraw needs integer
+            # arguments. This list is only used for drawing the circles.
+            if abs_radius >= constants.CIRCLE_RADIUS_CUTOFF:
+                circle_radii.append(int(abs_radius))
             if increase_i:
                 i += 1
             increase_i = not increase_i
             sign *= -1
             pop_back = not pop_back
 
-        return harmonics, offset
+        return harmonics, circle_radii, offset
 
     def update(self, dt):
         self.angle = self.angle + self.angular_velocity * dt
