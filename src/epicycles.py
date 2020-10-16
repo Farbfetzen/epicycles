@@ -41,9 +41,10 @@ class Epicycles:
 
         # Add the points twice so the line draw functions don't complain when
         # the app is started in the paused state.
-        p = self.get_next_point(0)
+        self.angle = 0  # in radians
+        self.angles = [self.angle, self.angle]
+        p = self.get_next_point(self.angle)
         self.points = [p, p]
-        self.angles = [0, 0]  # angles in radians
 
     def load_file(self, filename, scale, target_surface_rect):
         with open(filename, "r") as file:
@@ -122,28 +123,33 @@ class Epicycles:
         return harmonics, offset
 
     def update(self, dt):
-        next_angle = self.angles[-1] + self.angular_velocity * dt
-        next_point = self.get_next_point(next_angle)
+        self.angle = self.angle + self.angular_velocity * dt
+        previous_point = self.points[-1]
+        next_point = self.get_next_point(self.angle)
+        dist = previous_point.distance_to(next_point)
+        if dist < 1:
+            return
+        elif dist > constants.MAX_DIST:
+            pass
+            # TODO: re-enable interpolation later
+            # if self.previous_point.distance_to(self.point) > constants.MAX_DIST:
+            #     self.interpolated_points = (
+            #             (self.previous_point,) +
+            #             self.interpolate(
+            #                 self.previous_point,
+            #                 self.point,
+            #                 self.previous_angle,
+            #                 self.angle
+            #             ) +
+            #             (self.point,)
+            #     )
+            # else:
+            #     self.interpolated_points = ()
 
-        # TODO: re-enable interpolation later
-        # if self.previous_point.distance_to(self.point) > constants.MAX_DIST:
-        #     self.interpolated_points = (
-        #             (self.previous_point,) +
-        #             self.interpolate(
-        #                 self.previous_point,
-        #                 self.point,
-        #                 self.previous_angle,
-        #                 self.angle
-        #             ) +
-        #             (self.point,)
-        #     )
-        # else:
-        #     self.interpolated_points = ()
-
-        next_angle = self.trim(next_angle)
+        self.trim()
 
         # TODO: append the interpolated list instead
-        self.angles.append(next_angle)
+        self.angles.append(self.angle)
         self.points.append(next_point)
 
     def draw(self, target_surf):
@@ -188,7 +194,7 @@ class Epicycles:
         return self.complex_to_vec2(self.circle_centers[-1])
 
     def interpolate(self, p1, p2, a1, a2):
-        # FIXME: Why tuple? Append to list!
+        # FIXME: Why tuple? Add to list!
         # ATTENTION: Special case around tau, when next angle > tau and the
         #  previous angle < tau. Or vice versa when rotation the other
         #  direction. Maybe it is good to do the interpolation before correcting
@@ -205,42 +211,40 @@ class Epicycles:
             result += self.interpolate(new_point, p2, mean_angle, a2)
         return result
 
-    def trim(self, next_angle):
+    def trim(self):
         """Keep the points and angles lists short by
         removing old points that are more than tau radians behind.
         Also correct the angle so that it is always between 0 and tau.
         """
         oldest_angle = self.angles[0]
         if self.velocity_positive:
-            if next_angle >= math.tau:
+            if self.angle >= math.tau:
                 for i, angle in enumerate(self.angles):
                     if angle < oldest_angle:
                         self.angles = self.angles[i:]
                         self.points = self.points[i:]
                         break
-            next_angle %= math.tau
-            if self.angles[0] < next_angle:
+            self.angle %= math.tau
+            if self.angles[0] < self.angle:
                 for i, angle in enumerate(self.angles):
-                    if angle > next_angle:
+                    if angle > self.angle:
                         self.angles = self.angles[i:]
                         self.points = self.points[i:]
                         break
         else:
-            if next_angle < 0:
+            if self.angle < 0:
                 for i, angle in enumerate(self.angles):
                     if angle > oldest_angle:
                         self.angles = self.angles[i:]
                         self.points = self.points[i:]
                         break
-            next_angle %= math.tau
-            if self.angles[0] > next_angle:
+            self.angle %= math.tau
+            if self.angles[0] > self.angle:
                 for i, angle in enumerate(self.angles):
-                    if angle < next_angle:
+                    if angle < self.angle:
                         self.angles = self.angles[i:]
                         self.points = self.points[i:]
                         break
-
-        return next_angle
 
     def increase_speed(self):
         self.speed_index = min(self.speed_index + 1, len(constants.SPEEDS) - 1)

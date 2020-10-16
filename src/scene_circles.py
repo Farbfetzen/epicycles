@@ -60,6 +60,16 @@ class Circles(scene.Scene):
             elif event.key == pygame.K_F1:
                 self.show_debug_overlay = not self.show_debug_overlay
 
+            # DEBUG
+            elif event.key == pygame.K_d:
+                min_dist = 1000
+                for i, p in enumerate(self.epicycles.points):
+                    if i == 0:
+                        continue
+                    d = p.distance_to(self.epicycles.points[i - 1])
+                    min_dist = min(min_dist, d)
+                print(min_dist)
+
     def update(self, dt):
         if not self.paused:
             self.epicycles.update(dt)
