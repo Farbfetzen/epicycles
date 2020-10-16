@@ -145,10 +145,7 @@ class Epicycles:
 
         # Must be done after the interpolation and list trimming
         # or else those won't work.
-        if next_angle >= math.tau:
-            next_angle -= math.tau
-        elif next_angle < 0:
-            next_angle += math.tau
+        next_angle %= math.tau
 
         # TODO: append the interpolated list instead
         self.angles.append(next_angle)
