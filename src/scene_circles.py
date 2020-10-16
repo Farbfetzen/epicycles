@@ -7,17 +7,11 @@ from src import epicycles
 
 
 class Circles(scene.Scene):
-    def __init__(self,
-                 scene_manager,
-                 start_paused,
-                 filename,
-                 n,
-                 scale,
-                 fade,
-                 reverse):
+    def __init__(self, scene_manager, start_paused, filename, n,
+                 scale, fade, reverse, debug):
         super().__init__(scene_manager)
         self.paused = start_paused
-        self.show_debug_overlay = False
+        self.debug_mode = debug
         self.epicycles = epicycles.Epicycles(
             filename=filename,
             n=n,
@@ -58,17 +52,7 @@ class Circles(scene.Scene):
             # elif event.key == pygame.K_f:
             #     self.epicycles.fade = not self.epicycles.fade
             elif event.key == pygame.K_F1:
-                self.show_debug_overlay = not self.show_debug_overlay
-
-            # DEBUG
-            elif event.key == pygame.K_d:
-                min_dist = 1000
-                for i, p in enumerate(self.epicycles.points):
-                    if i == 0:
-                        continue
-                    d = p.distance_to(self.epicycles.points[i - 1])
-                    min_dist = min(min_dist, d)
-                print(min_dist)
+                self.debug_mode = not self.debug_mode
 
     def update(self, dt):
         if not self.paused:
@@ -78,7 +62,7 @@ class Circles(scene.Scene):
         self.target_surface.fill(constants.BACKGROUND_COLOR)
         self.epicycles.draw(self.target_surface)
 
-        if self.show_debug_overlay:
+        if self.debug_mode:
             fps = int(self.scene_manager.clock.get_fps())
             self.debug_font.render_to(
                 self.target_surface,

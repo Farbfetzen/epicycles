@@ -58,6 +58,12 @@ if __name__ == "__main__":
         help="Specify a custom window width and height in pixels.",
         default=constants.DEFAULT_WINDOW_SIZE
     )
+    parser.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        help="Start the app in debug mode."
+    )
     args = parser.parse_args()
     app = scene_manager.SceneManager(
         args.file,
@@ -66,6 +72,7 @@ if __name__ == "__main__":
         args.fade,
         args.reverse,
         args.paused,
-        args.window_size
+        args.window_size,
+        args.debug
     )
     app.run()

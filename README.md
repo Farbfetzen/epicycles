@@ -16,6 +16,7 @@ python epicycles.py shapes/heart.txt
 - **-r**, **--reverse**: Reverse the rotation direction.
 - **-p**, **--paused**: Start the app paused.
 - **--window-size \<width> \<height>**: Specify a custom window width and height in pixels.
+- **-d**, **--debug**: Start the app in debug mode.
 
 
 ### controls
@@ -27,3 +28,4 @@ python epicycles.py shapes/heart.txt
 - **-**: Decrease speed.
 - **R**: Reverse rotation.
 - **ESC**: Quit.
+- **F1**: Toggle debug mode.

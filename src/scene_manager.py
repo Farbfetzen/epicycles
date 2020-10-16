@@ -7,7 +7,7 @@ from src import scene_circles
 
 class SceneManager:
     def __init__(self, file, n, scale, fade,
-                 reverse, start_paused, window_size):
+                 reverse, start_paused, window_size, debug):
         pygame.init()
         self.running = True
         self.clock = pygame.time.Clock()
@@ -25,7 +25,8 @@ class SceneManager:
                 n,
                 scale,
                 fade,
-                reverse
+                reverse,
+                debug
             )
         }
         self.persistent_scene_data = {}
