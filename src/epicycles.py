@@ -28,15 +28,16 @@ class Epicycles:
 
         self.circle_centers = [0j] * (len(self.harmonics) + 1)
         self.circle_centers[0] = complex(
-            target_surface_rect.centerx - int(offset.x),
-            target_surface_rect.centery - int(offset.y)
+            target_surface_rect.centerx - int(offset.x),  # TODO int()???
+            target_surface_rect.centery - int(offset.y)   # TODO int()???
         )
         self.circle_radii = []
         for h in self.harmonics:
             radius = int(abs(h[0]))
-            # Only add circle if radius is large enough for it to be visible.
-            # Make it int because gfxdraw needs integer arguments.
-            if radius >= 1:
+            # Only add radius if the associated circle would be large enough
+            # to be visible. Make it int because gfxdraw needs integer
+            # arguments. This list is only used for drawing the circles.
+            if radius >= constants.CIRCLE_RADIUS_CUTOFF:
                 self.circle_radii.append(radius)
 
         # Add the points twice so the line draw functions don't complain when
@@ -112,7 +113,7 @@ class Epicycles:
             radius = transformed.pop(-pop_back)
             # Only add harmonics over a certain radius threshold to ignore
             # harmonics which don't noticeably contribute.
-            if abs(radius) >= 0.1:
+            if abs(radius) >= constants.HARMONICS_RADIUS_CUTOFF:
                 harmonics.append([radius, complex(0, sign * i)])
             if increase_i:
                 i += 1
@@ -157,15 +158,13 @@ class Epicycles:
         )
 
         if self.circles_visible:
-            # Integer centers because gfxdraw needs integer coordinates.
-            centers = [[int(p) for p in self.complex_to_vec2(cc)]
-                       for cc in self.circle_centers]
+            centers = [self.complex_to_vec2(cc) for cc in self.circle_centers]
             for center, radius in zip(centers, self.circle_radii):
                 pygame.gfxdraw.aacircle(
                     target_surf,
-                    center[0],
-                    center[1],
-                    int(radius),
+                    int(center.x),
+                    int(center.y),
+                    radius,
                     constants.CIRCLE_COLOR
                 )
             pygame.draw.aalines(
