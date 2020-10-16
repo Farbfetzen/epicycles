@@ -127,9 +127,9 @@ class Epicycles:
         previous_point = self.points[-1]
         next_point = self.get_point_at_angle(self.angle)
         dist = previous_point.distance_to(next_point)
-        if dist < 1:
+        if dist < constants.MIN_DISTANCE:
             return
-        elif dist > constants.MAX_DIST:
+        elif dist > constants.MAX_DISTANCE:
             interpolated_points, interpolated_angles = self.interpolate(
                         previous_point,
                         next_point,
@@ -140,16 +140,13 @@ class Epicycles:
                 if 0 <= angle < math.tau:
                     break
                 angle %= math.tau
-            new_points = interpolated_points.append(next_point)
-            new_angles = interpolated_angles.append(self.angle)
-        else:
-            new_points = next_point
-            new_angles = self.angle
+            self.points.extend(interpolated_points)
+            self.angles.extend(interpolated_angles)
 
         self.trim()
 
-        self.angles += new_angles
-        self.points += new_points
+        self.angles.append(self.angle)
+        self.points.append(next_point)
 
     def draw(self, target_surf):
         pygame.draw.aalines(
@@ -198,18 +195,18 @@ class Epicycles:
         mean_point = self.get_point_at_angle(mean_angle)
         result_points = []
         result_angles = []
-        if p1.distance_to(mean_point) > constants.MAX_DIST:
+        if p1.distance_to(mean_point) > constants.MAX_DISTANCE:
             interp_points, interp_angles = self.interpolate(p1, mean_point,
                                                             a1, mean_angle)
-            result_points += interp_points
-            result_angles += interp_angles
+            result_points.extend(interp_points)
+            result_angles.extend(interp_angles)
         result_points.append(mean_point)
         result_angles.append(mean_angle)
-        if mean_point.distance_to(p2) > constants.MAX_DIST:
+        if mean_point.distance_to(p2) > constants.MAX_DISTANCE:
             interp_points, interp_angles = self.interpolate(mean_point, p2,
                                                             mean_angle, a2)
-            result_points += interp_points
-            result_angles += interp_angles
+            result_points.extend(interp_points)
+            result_angles.extend(interp_angles)
         return result_points, result_angles
 
     def trim(self):
