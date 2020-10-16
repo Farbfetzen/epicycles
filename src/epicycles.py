@@ -189,6 +189,12 @@ class Epicycles:
 
     def interpolate(self, p1, p2, a1, a2):
         # FIXME: Why tuple? Append to list!
+        # ATTENTION: Special case around tau, when next angle > tau and the
+        #  previous angle < tau. Or vice versa when rotation the other
+        #  direction. Maybe it is good to do the interpolation before correcting
+        #  the angle and then correct all new angles afterwards if they
+        #  are < 0 or > tau. Just iterate from the end and stop when the angle
+        #  is in the allowed range.
         mean_angle = (a1 + a2) / 2
         new_point = self.get_next_point(mean_angle)
         result = ()
@@ -204,11 +210,9 @@ class Epicycles:
         removing old points that are more than tau radians behind.
         Also correct the angle so that it is always between 0 and tau.
         """
-        # FIXME: Add cases for negative rotation direction
-
         oldest_angle = self.angles[0]
         if self.velocity_positive:
-            if oldest_angle < math.tau <= next_angle:
+            if next_angle >= math.tau:
                 for i, angle in enumerate(self.angles):
                     if angle < oldest_angle:
                         self.angles = self.angles[i:]
@@ -221,20 +225,22 @@ class Epicycles:
                         self.angles = self.angles[i:]
                         self.points = self.points[i:]
                         break
+        else:
+            if next_angle < 0:
+                for i, angle in enumerate(self.angles):
+                    if angle > oldest_angle:
+                        self.angles = self.angles[i:]
+                        self.points = self.points[i:]
+                        break
+            next_angle %= math.tau
+            if self.angles[0] > next_angle:
+                for i, angle in enumerate(self.angles):
+                    if angle < next_angle:
+                        self.angles = self.angles[i:]
+                        self.points = self.points[i:]
+                        break
 
         return next_angle
-
-
-        # for i, angle in enumerate(self.angles):
-        #     if ((self.velocity_positive and angle > next_angle)
-        #             or (not self.velocity_positive and angle < next_angle)):
-        #         break
-        # else:
-        #     return
-        # if i > 0:
-        #     #print(f"{i=}, {angle=:.4f}, {next_angle=:.4f}")
-        #     self.points = self.points[i:]
-        #     self.angles = self.angles[i:]
 
     def increase_speed(self):
         self.speed_index = min(self.speed_index + 1, len(constants.SPEEDS) - 1)
@@ -255,6 +261,7 @@ class Epicycles:
         self.velocity_positive = not self.velocity_positive
         # Trim the point and angle lists here, otherwise there is a
         # possibility for them to become too long which may slow down the app.
+        # TODO: is this true? Test it!
         self.erase_line()
 
     def erase_line(self):
