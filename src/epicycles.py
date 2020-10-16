@@ -11,7 +11,6 @@ class Epicycles:
     def __init__(self, filename, n,
                  scale, fade, reverse, target_surface_rect):
         self.speed_index = 3
-        # speed of the innermost circle in radians/second-
         self.angular_velocity = constants.SPEEDS[self.speed_index]
         if reverse:
             self.angular_velocity *= -1

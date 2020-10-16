@@ -38,8 +38,8 @@ class SceneManager:
 
         while self.running:
             # Protect against hiccups (e.g. from moving the pygame window)
-            # by setting the lower limit to 33 milliseconds (30 FPS).
-            dt = min(self.clock.tick(constants.FPS), 33) / 1000
+            # by setting a lower limit to dt.
+            dt = min(self.clock.tick(constants.FPS) / 1000, constants.DT_LIMIT)
             for event in pygame.event.get():
                 self.active_scene.process_event(event)
             self.active_scene.update(dt)
