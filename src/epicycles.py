@@ -176,6 +176,10 @@ class Epicycles:
             )
 
     def get_point_at_angle(self, angle):
+        # I think profiling indicates that this function gets called a lot,
+        # especially when there is lots to interpolate (closed_hilbert). It may
+        # be a cause for the framerate issues. Is there a way to speed it up?
+
         # This is the formula:
         # a * exp(bj * t) + c
         # a is the amplitude (circle radius)
