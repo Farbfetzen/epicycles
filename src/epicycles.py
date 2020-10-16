@@ -10,7 +10,7 @@ from src import constants
 class Epicycles:
     def __init__(self, filename, n,
                  scale, fade, reverse, target_surface_rect):
-        self.angular_velocity = constants.DEFAULT_SPEED
+        self.angular_velocity = constants.DEFAULT_ANGULAR_VELOCITY
         if reverse:
             self.angular_velocity *= -1
         self.velocity_positive = self.angular_velocity > 0
@@ -244,17 +244,21 @@ class Epicycles:
                         self.points = self.points[i:]
                         break
 
-    def increase_speed(self):
+    def rotate_faster(self):
         self.angular_velocity = min(
-            self.angular_velocity * 2,
-            constants.MAX_SPEED
+            abs(self.angular_velocity) * 2,
+            constants.MAX_ANGULAR_VELOCITY
         )
+        if not self.velocity_positive:
+            self.angular_velocity *= -1
 
-    def decrease_speed(self):
+    def rotate_slower(self):
         self.angular_velocity = max(
-            self.angular_velocity / 2,
-            constants.MIN_SPEED
+            abs(self.angular_velocity) / 2,
+            constants.MIN_ANGULAR_VELOCITY
         )
+        if not self.velocity_positive:
+            self.angular_velocity *= -1
 
     def reverse_direction(self):
         self.angular_velocity *= -1

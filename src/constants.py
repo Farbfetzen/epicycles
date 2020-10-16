@@ -5,9 +5,9 @@ DEFAULT_SCALE_FACTOR = 0.8
 PATH_COLOR = (255, 0, 0)
 BACKGROUND_COLOR = (255, 255, 255)
 CIRCLE_COLOR = (170, 170, 170)
-DEFAULT_SPEED = 1  # in radians/second
-MIN_SPEED = 1 / 32
-MAX_SPEED = 4
+DEFAULT_ANGULAR_VELOCITY = 1  # in radians/second
+MIN_ANGULAR_VELOCITY = 1 / 32
+MAX_ANGULAR_VELOCITY = 4
 
 # The numbers in this section control the resolution but impact performance.
 # Smaller numbers result in prettier visuals but larger numbers make

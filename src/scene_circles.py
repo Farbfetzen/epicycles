@@ -48,9 +48,9 @@ class Circles(scene.Scene):
             elif event.key == pygame.K_c:
                 self.epicycles.circles_visible = not self.epicycles.circles_visible
             elif event.key == pygame.K_PLUS or event.key == pygame.K_KP_PLUS:
-                self.epicycles.increase_speed()
+                self.epicycles.rotate_faster()
             elif event.key == pygame.K_MINUS or event.key == pygame.K_KP_MINUS:
-                self.epicycles.decrease_speed()
+                self.epicycles.rotate_slower()
             elif event.key == pygame.K_r:
                 self.epicycles.reverse_direction()
             elif event.key == pygame.K_BACKSPACE:
