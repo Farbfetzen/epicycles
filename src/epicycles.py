@@ -179,6 +179,10 @@ class Epicycles:
             )
 
     def get_point_at_angle(self, angle):
+        # FIXME: This function get's called a lot and takes a big chunk of the
+        #  time in a tick. Any way to make it faster? Maybe using numpy
+        #  vectorization?
+
         # This is the formula:
         # a * exp(b * t) + c
         # a is the amplitude (circle radius)
