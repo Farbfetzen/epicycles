@@ -50,11 +50,11 @@ class Epicycles:
             return
         elif dist > constants.MAX_DISTANCE:
             interpolated_points, interpolated_angles = self.interpolate(
-                        previous_point,
-                        next_point,
-                        self.angles[-1],
-                        self.current_angle
-                    )
+                previous_point,
+                next_point,
+                self.angles[-1],
+                self.current_angle
+            )
             for angle in reversed(interpolated_angles):
                 if 0 <= angle < math.tau:
                     break
