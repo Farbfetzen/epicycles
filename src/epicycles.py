@@ -111,7 +111,9 @@ class Epicycles:
             # Only add harmonics over a certain radius threshold to ignore
             # harmonics which don't noticeably contribute.
             if abs_radius >= constants.HARMONICS_RADIUS_CUTOFF:
-                harmonics.append([radius, complex(0, sign * i)])
+                # Save radius as complex because the accuracy of
+                # numpy.complex128 is not necessary here.
+                harmonics.append([complex(radius), complex(0, sign * i)])
             # Only add radius if the associated circle would be large enough
             # to be visible. Make it int because gfxdraw needs integer
             # arguments. This list is only used for drawing the circles.
