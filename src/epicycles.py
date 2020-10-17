@@ -263,9 +263,7 @@ class Epicycles:
     def reverse_direction(self):
         self.angular_velocity *= -1
         self.velocity_positive = not self.velocity_positive
-        # Trim the point and angle lists here, otherwise there is a
-        # possibility for them to become too long which may slow down the app.
-        # TODO: is this true? Test it!
+        # Erase the point and angle lists here, otherwise the line glitches.
         self.erase_line()
 
     def erase_line(self):
