@@ -45,10 +45,10 @@ class Epicycles:
         self.current_angle = self.current_angle + self.angular_velocity * dt
         previous_point = self.points[-1]
         next_point = self.get_point_at_angle(self.current_angle)
-        dist = previous_point.distance_to(next_point)
-        if dist < constants.MIN_DISTANCE:
+        dist_sq = previous_point.distance_squared_to(next_point)
+        if dist_sq < constants.MIN_DISTANCE_SQ:
             return
-        elif dist > constants.MAX_DISTANCE:
+        elif dist_sq > constants.MAX_DISTANCE_SQ:
             interpolated_points, interpolated_angles = self.interpolate(
                 previous_point,
                 next_point,
@@ -126,14 +126,14 @@ class Epicycles:
         mean_point = self.get_point_at_angle(mean_angle)
         result_points = []
         result_angles = []
-        if p1.distance_to(mean_point) > constants.MAX_DISTANCE:
+        if p1.distance_squared_to(mean_point) > constants.MAX_DISTANCE_SQ:
             interp_points, interp_angles = self.interpolate(p1, mean_point,
                                                             a1, mean_angle)
             result_points.extend(interp_points)
             result_angles.extend(interp_angles)
         result_points.append(mean_point)
         result_angles.append(mean_angle)
-        if mean_point.distance_to(p2) > constants.MAX_DISTANCE:
+        if mean_point.distance_squared_to(p2) > constants.MAX_DISTANCE_SQ:
             interp_points, interp_angles = self.interpolate(mean_point, p2,
                                                             mean_angle, a2)
             result_points.extend(interp_points)
