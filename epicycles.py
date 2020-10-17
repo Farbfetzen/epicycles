@@ -36,7 +36,7 @@ if __name__ == "__main__":
         "-f",
         "--fade",
         action="store_true",
-        help="Fade the line over time so that it vanishes after one cycle."
+        help="Fade the line color over time so that it vanishes after one cycle."
     )
     parser.add_argument(
         "-r",

@@ -82,7 +82,7 @@ class Epicycles:
         else:
             pygame.draw.aalines(
                 target_surf,
-                constants.PATH_COLOR,
+                constants.LINE_COLOR,
                 False,
                 self.points
             )
@@ -178,28 +178,25 @@ class Epicycles:
     def reverse_direction(self):
         self.angular_velocity *= -1
         self.velocity_positive = not self.velocity_positive
-        # Erase the line here, otherwise it glitches.
+        # Erase the line here and reverse the remnant, otherwise it glitches.
         self.erase_line()
+        self.points.reverse()
+        self.angles.reverse()
+        self.line_colors.reverse()
 
     def erase_line(self):
         # Keep the last two points so the draw functions don't complain.
         self.points = self.points[-2:]
         self.angles = self.angles[-2:]
+        # Colors list length must be one less than points and angles.
+        self.line_colors = self.line_colors[-1:]
 
     def fade_line(self):
         self.line_colors = []
-
-        # if self.velocity_positive:
-        #     for angle in self.angles:
-        #         if angle > self.current_angle:
-        #             dist = self.current_angle - (angle - math.tau)
-        #         col = constants.
-        #
-        #         self.line_colors.append(angle / math.tau)
-        #
-        # else:
-        #     pass
-
-        # Remove one color because the number of lines is one less than
-        # the number of points.
-        # self.line_colors.pop()
+        for angle in self.angles:
+            self.line_colors.append(
+                constants.LINE_COLOR.lerp(
+                    constants.BACKGROUND_COLOR,
+                    abs(self.current_angle - angle) / math.tau
+                )
+            )

@@ -12,7 +12,7 @@ python epicycles.py shapes/heart.txt
 - **-h**, **--help**: Show a help message and exit.
 - **-n \<int>**: Limit the maximum number of circles.
 - **-s**, **--scale \<float>**: A number > 0 and <= 1 indicating how much of the width and height of the window the shape should occupy. To disable scaling set it to 0.
-- **-f**, **--fade**: Fade the line over time so that it vanishes after one cycle.
+- **-f**, **--fade**: Fade the line color over time so that it vanishes after one cycle.
 - **-r**, **--reverse**: Reverse the rotation direction.
 - **-p**, **--paused**: Start the app paused.
 - **--window-size \<width> \<height>**: Specify a custom window width and height in pixels.
