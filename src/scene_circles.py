@@ -18,7 +18,8 @@ class Circles(scene.Scene):
             scale=scale,
             fade=fade,
             reverse=reverse,
-            target_surface_rect=self.target_surface.get_rect()
+            target_surface_rect=self.target_surface.get_rect(),
+            debug=debug
         )
         self.debug_font = pygame.freetype.SysFont(
             "consolas, inconsolate, monospace",

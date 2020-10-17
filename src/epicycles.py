@@ -9,8 +9,8 @@ from src import constants
 
 
 class Epicycles:
-    def __init__(self, filename, n,
-                 scale, fade, reverse, target_surface_rect):
+    def __init__(self, filename, n, scale, fade, reverse,
+                 target_surface_rect, debug):
         self.angular_velocity = constants.DEFAULT_ANGULAR_VELOCITY
         if reverse:
             self.angular_velocity *= -1
@@ -39,6 +39,10 @@ class Epicycles:
         self.angles = [self.angle, self.angle]
         p = self.get_point_at_angle(self.angle)
         self.points = [p, p]
+
+        if debug:
+            print(f"{len(self.harmonics)=}")
+            print(f"{len(self.circle_radii)=}")
 
     def load_file(self, filename, scale, target_surface_rect):
         with open(filename, "r") as file:
