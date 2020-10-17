@@ -26,8 +26,7 @@ class Circles(scene.Scene):
             18
         )
         self.debug_font.pad = True
-        # Text color is inverted background color:
-        self.debug_font.fgcolor = [(255 - c) % 256 for c in constants.BACKGROUND_COLOR]
+        self.debug_font.fgcolor = [(255 - c) % 256 for c in constants.BACKGROUND_COLOR[:3]]
         self.debug_line_spacing = pygame.Vector2(
             0, self.debug_font.get_sized_height()
         )
@@ -50,8 +49,8 @@ class Circles(scene.Scene):
                 self.epicycles.reverse_direction()
             elif event.key == pygame.K_BACKSPACE:
                 self.epicycles.erase_line()
-            # elif event.key == pygame.K_f:
-            #     self.epicycles.fade = not self.epicycles.fade
+            elif event.key == pygame.K_f:
+                self.epicycles.fade = not self.epicycles.fade
             elif event.key == pygame.K_F1:
                 self.debug_mode = not self.debug_mode
 

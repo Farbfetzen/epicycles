@@ -30,19 +30,21 @@ class Epicycles:
 
         # Add the points twice so the line draw functions don't complain when
         # the app is started in the paused state.
-        self.angle = 0  # in radians
-        self.angles = [self.angle, self.angle]
-        p = self.get_point_at_angle(self.angle)
+        self.current_angle = 0  # in radians
+        self.angles = [self.current_angle, self.current_angle]
+        p = self.get_point_at_angle(self.current_angle)
         self.points = [p, p]
+
+        self.line_colors = []
 
         if debug:
             print(f"{len(self.harmonics)=}")
             print(f"{len(self.circle_radii)=}")
 
     def update(self, dt):
-        self.angle = self.angle + self.angular_velocity * dt
+        self.current_angle = self.current_angle + self.angular_velocity * dt
         previous_point = self.points[-1]
-        next_point = self.get_point_at_angle(self.angle)
+        next_point = self.get_point_at_angle(self.current_angle)
         dist = previous_point.distance_to(next_point)
         if dist < constants.MIN_DISTANCE:
             return
@@ -51,7 +53,7 @@ class Epicycles:
                         previous_point,
                         next_point,
                         self.angles[-1],
-                        self.angle
+                        self.current_angle
                     )
             for angle in reversed(interpolated_angles):
                 if 0 <= angle < math.tau:
@@ -62,16 +64,28 @@ class Epicycles:
 
         self.trim()
 
-        self.angles.append(self.angle)
+        if self.fade:
+            self.fade_line()
+
+        self.angles.append(self.current_angle)
         self.points.append(next_point)
 
     def draw(self, target_surf):
-        pygame.draw.aalines(
-            target_surf,
-            constants.PATH_COLOR,
-            False,
-            self.points
-        )
+        if self.fade:
+            for i, col in enumerate(self.line_colors):
+                pygame.draw.aaline(
+                    target_surf,
+                    col,
+                    self.points[i],
+                    self.points[i + 1]
+                )
+        else:
+            pygame.draw.aalines(
+                target_surf,
+                constants.PATH_COLOR,
+                False,
+                self.points
+            )
 
         if self.circles_visible:
             centers = [transform.complex_to_vec2(cc) for cc in self.circle_centers]
@@ -99,12 +113,11 @@ class Epicycles:
         # a * exp(b * t) + c
         # a is the amplitude (circle radius)
         # b is the angular velocity (speed and direction)
-        # t is the current angle
+        # t is the angle
         # c is the position of the circle center
 
         for i, (a, b) in enumerate(self.harmonics):
-            self.circle_centers[i + 1] = \
-                a * cmath.exp(b * angle) + self.circle_centers[i]
+            self.circle_centers[i + 1] = a * cmath.exp(b * angle) + self.circle_centers[i]
         return transform.complex_to_vec2(self.circle_centers[-1])
 
     def interpolate(self, p1, p2, a1, a2):
@@ -134,30 +147,30 @@ class Epicycles:
         """
         oldest_angle = self.angles[0]
         if self.velocity_positive:
-            if self.angle >= math.tau:
+            if self.current_angle >= math.tau:
                 for i, angle in enumerate(self.angles):
                     if angle < oldest_angle:
                         self.angles = self.angles[i:]
                         self.points = self.points[i:]
                         break
-            self.angle %= math.tau
-            if self.angles[0] < self.angle:
+            self.current_angle %= math.tau
+            if self.angles[0] < self.current_angle:
                 for i, angle in enumerate(self.angles):
-                    if angle > self.angle:
+                    if angle > self.current_angle:
                         self.angles = self.angles[i:]
                         self.points = self.points[i:]
                         break
         else:
-            if self.angle < 0:
+            if self.current_angle < 0:
                 for i, angle in enumerate(self.angles):
                     if angle > oldest_angle:
                         self.angles = self.angles[i:]
                         self.points = self.points[i:]
                         break
-            self.angle %= math.tau
-            if self.angles[0] > self.angle:
+            self.current_angle %= math.tau
+            if self.angles[0] > self.current_angle:
                 for i, angle in enumerate(self.angles):
-                    if angle < self.angle:
+                    if angle < self.current_angle:
                         self.angles = self.angles[i:]
                         self.points = self.points[i:]
                         break
@@ -188,3 +201,21 @@ class Epicycles:
         # Keep the last two points so the draw functions don't complain.
         self.points = self.points[-2:]
         self.angles = self.angles[-2:]
+
+    def fade_line(self):
+        self.line_colors = []
+
+        # if self.velocity_positive:
+        #     for angle in self.angles:
+        #         if angle > self.current_angle:
+        #             dist = self.current_angle - (angle - math.tau)
+        #         col = constants.
+        #
+        #         self.line_colors.append(angle / math.tau)
+        #
+        # else:
+        #     pass
+
+        # Remove one color because the number of lines is one less than
+        # the number of points.
+        # self.line_colors.pop()
