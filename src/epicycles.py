@@ -62,7 +62,7 @@ class Epicycles:
             self.points.extend(interpolated_points)
             self.angles.extend(interpolated_angles)
 
-        self.trim()
+        self.trim_line()
 
         if self.fade:
             self.fade_line()
@@ -140,40 +140,24 @@ class Epicycles:
             result_angles.extend(interp_angles)
         return result_points, result_angles
 
-    def trim(self):
+    def trim_line(self):
         """Keep the points and angles lists short by
         removing old points that are more than tau radians behind.
-        Also correct the angle so that it is always between 0 and tau.
         """
-        oldest_angle = self.angles[0]
         if self.velocity_positive:
-            if self.current_angle >= math.tau:
-                for i, angle in enumerate(self.angles):
-                    if angle < oldest_angle:
-                        self.angles = self.angles[i:]
-                        self.points = self.points[i:]
-                        break
-            self.current_angle %= math.tau
-            if self.angles[0] < self.current_angle:
-                for i, angle in enumerate(self.angles):
-                    if angle > self.current_angle:
-                        self.angles = self.angles[i:]
-                        self.points = self.points[i:]
-                        break
+            limit = self.current_angle - math.tau
+            for i, angle in enumerate(self.angles):
+                if angle > limit:
+                    self.angles = self.angles[i:]
+                    self.points = self.points[i:]
+                    break
         else:
-            if self.current_angle < 0:
-                for i, angle in enumerate(self.angles):
-                    if angle > oldest_angle:
-                        self.angles = self.angles[i:]
-                        self.points = self.points[i:]
-                        break
-            self.current_angle %= math.tau
-            if self.angles[0] > self.current_angle:
-                for i, angle in enumerate(self.angles):
-                    if angle < self.current_angle:
-                        self.angles = self.angles[i:]
-                        self.points = self.points[i:]
-                        break
+            limit = self.current_angle + math.tau
+            for i, angle in enumerate(self.angles):
+                if angle < limit:
+                    self.angles = self.angles[i:]
+                    self.points = self.points[i:]
+                    break
 
     def rotate_faster(self):
         self.angular_velocity = min(

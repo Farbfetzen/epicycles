@@ -1,6 +1,8 @@
 import pygame
 import pygame.freetype
 
+import math
+
 from src import constants
 from src import scene
 from src import epicycles
@@ -77,12 +79,14 @@ class Circles(scene.Scene):
             self.debug_font.render_to(
                 self.target_surface,
                 self.debug_margin + self.debug_line_spacing * 2,
-                f"angle: {self.epicycles.angles[-1]:.2f} rad"
+                f"angle: {self.epicycles.current_angle:.2f} rad " +
+                f"({self.epicycles.current_angle % math.tau:.2f})"
             )
             self.debug_font.render_to(
                 self.target_surface,
                 self.debug_margin + self.debug_line_spacing * 3,
-                f"oldest angle: {self.epicycles.angles[0]:.2f} rad"
+                f"oldest angle: {self.epicycles.angles[0]:.2f} rad " +
+                f"({self.epicycles.angles[0] % math.tau:.2f})"
             )
             self.debug_font.render_to(
                 self.target_surface,
