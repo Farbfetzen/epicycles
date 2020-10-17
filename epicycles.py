@@ -51,6 +51,7 @@ if __name__ == "__main__":
         help="Start the app paused."
     )
     parser.add_argument(
+        "-w",
         "--window-size",
         metavar=("<width>", "<height>"),
         nargs=2,

@@ -15,7 +15,7 @@ python epicycles.py shapes/heart.txt
 - **-f**, **--fade**: Fade the line color over time so that it vanishes after one cycle.
 - **-r**, **--reverse**: Reverse the rotation direction.
 - **-p**, **--paused**: Start the app paused.
-- **--window-size \<width> \<height>**: Specify a custom window width and height in pixels.
+- **-w**, **--window-size \<width> \<height>**: Specify a custom window width and height in pixels.
 - **-d**, **--debug**: Start the app in debug mode.
 
 
