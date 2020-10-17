@@ -19,7 +19,7 @@ if __name__ == "__main__":
         "-n",
         type=int,
         metavar="<int>",
-        help="Limit the maximum number of harmonics or circles.",
+        help="Limit the maximum number of circles.",
         default=0
     )
     parser.add_argument(

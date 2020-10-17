@@ -10,7 +10,7 @@ python epicycles.py shapes/heart.txt
 
 ### optional command line arguments
 - **-h**, **--help**: Show a help message and exit.
-- **-n \<int>**: Limit the maximum number of harmonics or circles.
+- **-n \<int>**: Limit the maximum number of circles.
 - **-s**, **--scale \<float>**: A number > 0 and <= 1 indicating how much of the width and height of the window the shape should occupy. To disable scaling set it to 0.
 - **-f**, **--fade**: Fade the line over time so that it vanishes after one cycle.
 - **-r**, **--reverse**: Reverse the rotation direction.
