@@ -274,5 +274,5 @@ class Epicycles:
         self.angles = self.angles[-2:]
 
     @staticmethod
-    def complex_to_vec2(z):
-        return pygame.Vector2(z.real, z.imag)
+    def complex_to_vec2(c):
+        return pygame.Vector2(c.real, c.imag)
