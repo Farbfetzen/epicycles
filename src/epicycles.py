@@ -1,15 +1,15 @@
 import math
 import cmath
-import numpy.fft
 
 import pygame
 import pygame.gfxdraw
 
 from src import constants
+from src import transform
 
 
 class Epicycles:
-    def __init__(self, filename, n, scale, fade, reverse,
+    def __init__(self, filename, n, scale_factor, fade, reverse,
                  target_surface_rect, debug):
         self.angular_velocity = constants.DEFAULT_ANGULAR_VELOCITY
         if reverse:
@@ -18,20 +18,15 @@ class Epicycles:
         self.circles_visible = True
         self.fade = fade
 
-        self.harmonics, self.circle_radii, offset = self.load_file(
+        self.harmonics, self.circle_radii, offset = transform.from_txt(
             filename,
-            scale,
-            target_surface_rect
+            scale_factor,
+            target_surface_rect,
+            n
         )
-        if n > 0:
-            self.harmonics = self.harmonics[:n]
-            self.circle_radii = self.circle_radii[:n]
 
         self.circle_centers = [0j] * (len(self.harmonics) + 1)
-        self.circle_centers[0] = complex(
-            target_surface_rect.centerx - offset.x,
-            target_surface_rect.centery - offset.y
-        )
+        self.circle_centers[0] = complex(*(offset + target_surface_rect.center))
 
         # Add the points twice so the line draw functions don't complain when
         # the app is started in the paused state.
@@ -43,89 +38,6 @@ class Epicycles:
         if debug:
             print(f"{len(self.harmonics)=}")
             print(f"{len(self.circle_radii)=}")
-
-    def load_file(self, filename, scale, target_surface_rect):
-        with open(filename, "r") as file:
-            file_type = file.readline().strip()
-            if file_type == "shape":
-                points = []
-                for line in file:
-                    x, y = line.split()
-                    # Flip the image by negating y because in pygame y=0
-                    # is at the top.
-                    points.append(pygame.Vector2(float(x), -float(y)))
-                harmonics, circle_radii, offset = self.transform_coordinates(
-                    points,
-                    scale,
-                    target_surface_rect
-                )
-            elif file_type == "harmonics":
-                # TODO: Implement this. Remember to scale these.
-                raise NotImplementedError("Harmonic files can not yet be read.")
-            else:
-                raise ValueError(
-                    "Unknown file type. First line in file must be either " +
-                    "\"shape\" or \"harmonics\""
-                )
-        return harmonics, circle_radii, offset
-
-    def transform_coordinates(self, points, scale_factor, target_surface_rect):
-        # Center the shape around (0, 0):
-        max_x = max(points, key=lambda vec: vec.x).x
-        min_x = min(points, key=lambda vec: vec.x).x
-        max_y = max(points, key=lambda vec: vec.y).y
-        min_y = min(points, key=lambda vec: vec.y).y
-        center = pygame.Vector2(
-            (max_x + min_x) / 2,
-            (max_y + min_y) / 2
-        )
-        for p in points:
-            p -= center
-
-        # Scale the shape relative to scale factor and window size:
-        if scale_factor < 0 or scale_factor > 1:
-            raise ValueError("Argument \"--scale\" must be between 0 and 1.")
-        if scale_factor != 0:
-            max_allowed_x = scale_factor * target_surface_rect.centerx
-            max_allowed_y = scale_factor * target_surface_rect.centery
-            if max_allowed_x <= max_allowed_y:
-                ratio = max_allowed_x / (max_x - center.x)
-            else:
-                ratio = max_allowed_y / (max_y - center.y)
-            for p in points:
-                p *= ratio
-
-        # Transform:
-        complex_points = [complex(*p) for p in points]
-        transformed = list(numpy.fft.ifft(complex_points))
-        offset = pygame.Vector2(self.complex_to_vec2(transformed.pop(0))) * -1
-        harmonics = []
-        circle_radii = []
-        i = 1
-        increase_i = False
-        sign = -1
-        pop_back = False  # pop from the front or the back
-        while transformed:
-            radius = transformed.pop(-pop_back)
-            abs_radius = abs(radius)
-            # Only add harmonics over a certain radius threshold to ignore
-            # harmonics which don't noticeably contribute.
-            if abs_radius >= constants.HARMONICS_RADIUS_CUTOFF:
-                # Save radius as complex because the accuracy of
-                # numpy.complex128 is not necessary here.
-                harmonics.append([complex(radius), complex(0, sign * i)])
-            # Only add radius if the associated circle would be large enough
-            # to be visible. Make it int because gfxdraw needs integer
-            # arguments. This list is only used for drawing the circles.
-            if abs_radius >= constants.CIRCLE_RADIUS_CUTOFF:
-                circle_radii.append(int(abs_radius))
-            if increase_i:
-                i += 1
-            increase_i = not increase_i
-            sign *= -1
-            pop_back = not pop_back
-
-        return harmonics, circle_radii, offset
 
     def update(self, dt):
         self.angle = self.angle + self.angular_velocity * dt
@@ -162,7 +74,7 @@ class Epicycles:
         )
 
         if self.circles_visible:
-            centers = [self.complex_to_vec2(cc) for cc in self.circle_centers]
+            centers = [transform.complex_to_vec2(cc) for cc in self.circle_centers]
             for center, radius in zip(centers, self.circle_radii):
                 pygame.gfxdraw.aacircle(
                     target_surf,
@@ -179,7 +91,7 @@ class Epicycles:
             )
 
     def get_point_at_angle(self, angle):
-        # FIXME: This function get's called a lot and takes a big chunk of the
+        # FIXME: This function gets called a lot and takes a big chunk of the
         #  time in a tick. Any way to make it faster? Maybe using numpy
         #  vectorization?
 
@@ -193,7 +105,7 @@ class Epicycles:
         for i, (a, b) in enumerate(self.harmonics):
             self.circle_centers[i + 1] = \
                 a * cmath.exp(b * angle) + self.circle_centers[i]
-        return self.complex_to_vec2(self.circle_centers[-1])
+        return transform.complex_to_vec2(self.circle_centers[-1])
 
     def interpolate(self, p1, p2, a1, a2):
         """Add more points in between if two points are too far apart."""
@@ -269,14 +181,10 @@ class Epicycles:
     def reverse_direction(self):
         self.angular_velocity *= -1
         self.velocity_positive = not self.velocity_positive
-        # Erase the point and angle lists here, otherwise the line glitches.
+        # Erase the line here, otherwise it glitches.
         self.erase_line()
 
     def erase_line(self):
         # Keep the last two points so the draw functions don't complain.
         self.points = self.points[-2:]
         self.angles = self.angles[-2:]
-
-    @staticmethod
-    def complex_to_vec2(c):
-        return pygame.Vector2(c.real, c.imag)

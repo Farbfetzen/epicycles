@@ -15,7 +15,7 @@ class Circles(scene.Scene):
         self.epicycles = epicycles.Epicycles(
             filename=filename,
             n=n,
-            scale=scale,
+            scale_factor=scale,
             fade=fade,
             reverse=reverse,
             target_surface_rect=self.target_surface.get_rect(),
