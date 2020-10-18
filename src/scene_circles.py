@@ -17,7 +17,7 @@ class Circles(scene.Scene):
         self.epicycles = None
         self.debug_font = pygame.freetype.SysFont(
             "consolas, inconsolate, monospace",
-            18
+            16
         )
         self.debug_font.pad = True
         self.debug_font.fgcolor = [(255 - c) % 256 for c in constants.BACKGROUND_COLOR[:3]]
