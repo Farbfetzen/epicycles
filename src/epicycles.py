@@ -9,8 +9,8 @@ from src import transform
 
 
 class Epicycles:
-    def __init__(self, filename, n, scale_factor, fade, reverse,
-                 target_surface_rect, debug):
+    def __init__(self, points, n, fade, reverse,
+                 surface_center, debug):
         self.angular_velocity = constants.DEFAULT_ANGULAR_VELOCITY
         if reverse:
             self.angular_velocity *= -1
@@ -18,15 +18,13 @@ class Epicycles:
         self.circles_visible = True
         self.fade = fade
 
-        self.harmonics, self.circle_radii, offset = transform.from_txt(
-            filename,
-            scale_factor,
-            target_surface_rect,
-            n
-        )
+        self.harmonics, self.circle_radii, offset = transform.transform(points)
+        if n > 0:
+            self.harmonics = self.harmonics[:n]
+            self.circle_radii = self.circle_radii[:n]
 
         self.circle_centers = [0j] * (len(self.harmonics) + 1)
-        self.circle_centers[0] = complex(*(offset + target_surface_rect.center))
+        self.circle_centers[0] = complex(*(offset + surface_center))
 
         # Add the points twice so the line draw functions don't complain when
         # the app is started in the paused state.

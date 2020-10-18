@@ -6,23 +6,15 @@ import math
 from src import constants
 from src import scene
 from src import epicycles
+from src import transform
 
 
 class Circles(scene.Scene):
-    def __init__(self, scene_manager, start_paused, filename, n,
-                 scale, fade, reverse, debug):
+    def __init__(self, scene_manager, start_paused, debug):
         super().__init__(scene_manager)
         self.paused = start_paused
         self.debug_mode = debug
-        self.epicycles = epicycles.Epicycles(
-            filename=filename,
-            n=n,
-            scale_factor=scale,
-            fade=fade,
-            reverse=reverse,
-            target_surface_rect=self.target_surface.get_rect(),
-            debug=debug
-        )
+        self.epicycles = None
         self.debug_font = pygame.freetype.SysFont(
             "consolas, inconsolate, monospace",
             18
@@ -94,8 +86,28 @@ class Circles(scene.Scene):
                 f"number of points: {len(self.epicycles.points)}"
             )
 
-    def start(self):
-        # Only relevant when coming from the Draw scene.
-        # Read the new path from the persistent data and construct new
-        # epicycles accordingly.
-        pass
+    def start(self, filename="", points=None, n=0, fade=False,
+              scale=constants.DEFAULT_SCALE_FACTOR, reverse=False):
+        target_surface_rect = self.target_surface.get_rect()
+        if filename:
+            with open(filename, "r") as file:
+                points = []
+                for line in file:
+                    x, y = line.split()
+                    # Flip the image by negating y because in pygame y=0
+                    # is at the top.
+                    points.append(pygame.Vector2(float(x), -float(y)))
+            points = transform.scale(
+                *transform.center(points),
+                scale,
+                target_surface_rect
+            )
+
+        self.epicycles = epicycles.Epicycles(
+            points=points,
+            n=n,
+            fade=fade,
+            reverse=reverse,
+            surface_center=target_surface_rect.center,
+            debug=self.debug_mode
+        )

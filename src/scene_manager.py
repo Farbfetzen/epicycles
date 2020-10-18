@@ -3,6 +3,7 @@ import pygame.freetype
 
 from src import constants
 from src import scene_circles
+from src import scene_draw
 
 
 class SceneManager:
@@ -18,20 +19,16 @@ class SceneManager:
         #  making the first scene "Draw".
 
         self.scenes = {
-            "show": scene_circles.Circles(
-                self,
-                start_paused,
-                file,
-                n,
-                scale,
-                fade,
-                reverse,
-                debug
-            )
+            "show": scene_circles.Circles(self, start_paused, debug),
+            "draw": scene_draw.Draw(self)
         }
         self.persistent_scene_data = {}
-        self.active_scene = self.scenes["show"]
-        self.active_scene.start()
+        if file:
+            self.active_scene = self.scenes["show"]
+            self.active_scene.start(filename=file, n=n, scale=scale,
+                                    fade=fade, reverse=reverse)
+        else:
+            self.active_scene = self.scenes["draw"]
 
     def run(self):
         # Prevent the first dt from getting too large due to file loading etc.
@@ -39,7 +36,7 @@ class SceneManager:
 
         while self.running:
             # Protect against hiccups (e.g. from moving the pygame window)
-            # by setting a lower limit to dt.
+            # by setting an upper limit to dt.
             dt = min(self.clock.tick(constants.FPS) / 1000, constants.DT_LIMIT)
             for event in pygame.event.get():
                 self.active_scene.process_event(event)
@@ -48,11 +45,8 @@ class SceneManager:
             pygame.display.flip()
 
     def change_scenes(self, next_scene_name):
-        # TODO: Make a scene where the user can draw their own shapes. Then
-        #  pass that pointlist to the Show scene.
         if next_scene_name == "":
-            if __name__ == '__main__':
-                self.running = False
-                return
+            self.running = False
+            return
         self.active_scene = self.scenes[next_scene_name]
         self.active_scene.start()

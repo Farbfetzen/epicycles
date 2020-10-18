@@ -10,17 +10,6 @@ def complex_to_vec2(c):
     return pygame.Vector2(c.real, c.imag)
 
 
-def load_txt(filename):
-    with open(filename, "r") as file:
-        points = []
-        for line in file:
-            x, y = line.split()
-            # Flip the image by negating y because in pygame y=0
-            # is at the top.
-            points.append(pygame.Vector2(float(x), -float(y)))
-    return points
-
-
 def center(points):
     """Center the shape around (0, 0)"""
     max_x = max(points, key=lambda vec: vec.x).x
@@ -90,16 +79,6 @@ def transform(points):
         sign *= -1
         pop_back = not pop_back
 
-    return harmonics, circle_radii, offset
-
-
-def from_txt(filename, scale_factor, target_surface_rect, n):
-    points = load_txt(filename)
-    points = scale(*center(points), scale_factor, target_surface_rect)
-    harmonics, circle_radii, offset = transform(points)
-    if n > 0:
-        harmonics = harmonics[:n]
-        circle_radii = circle_radii[:n]
     return harmonics, circle_radii, offset
 
 

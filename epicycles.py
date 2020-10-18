@@ -13,7 +13,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "file",
-        help="Path to file containing the desired shape."
+        help="Path to file containing the desired shape.",
+        default="",
+        nargs="?"
     )
     parser.add_argument(
         "-n",
