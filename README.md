@@ -2,10 +2,11 @@
 
 Requires Python >= 3.6, PyGame 2 and NumPy.
  
-To run the app you must provide a path to a text file containing the points of the desired shape:
+To run the app you can provide a path to a text file containing the points of the desired shape:
 ```
 python epicycles.py shapes/heart.txt
 ```
+If you run it without a file path then the app will go into "draw" mode. All other arguments will be ignored in this case. There you you can draw a shape with the mouse. Then hit Enter to watch the circles go.
 
 
 ### optional command line arguments
@@ -28,4 +29,5 @@ python epicycles.py shapes/heart.txt
 - **-**: Decrease speed.
 - **R**: Reverse rotation.
 - **ESC**: Quit.
+- **Enter**: Switch between the circles and the drawing mode.
 - **F1**: Toggle debug mode.
