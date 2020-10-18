@@ -10,21 +10,18 @@ class SceneManager:
     def __init__(self, file, n, scale, fade,
                  reverse, start_paused, window_size, debug):
         pygame.init()
+        pygame.display.set_caption("Epicycles")
+        self.display = pygame.display.set_mode(window_size)
         self.running = True
         self.clock = pygame.time.Clock()
-        self.display = pygame.display.set_mode(window_size)
-        pygame.display.set_caption("Epicycles")
-
-        # TODO: Make it possible to start the game without a filename, thus
-        #  making the first scene "Draw".
 
         self.scenes = {
-            "show": scene_circles.Circles(self, start_paused, debug),
-            "draw": scene_draw.Draw(self)
+            "circles": scene_circles.Circles(self, start_paused, debug),
+            "draw": scene_draw.Draw(self, debug)
         }
         self.persistent_scene_data = {}
         if file:
-            self.active_scene = self.scenes["show"]
+            self.active_scene = self.scenes["circles"]
             self.active_scene.start(filename=file, n=n, scale=scale,
                                     fade=fade, reverse=reverse)
         else:

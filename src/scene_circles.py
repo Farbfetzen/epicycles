@@ -11,20 +11,40 @@ from src import transform
 
 class Circles(scene.Scene):
     def __init__(self, scene_manager, start_paused, debug):
-        super().__init__(scene_manager)
+        super().__init__(scene_manager, debug)
         self.paused = start_paused
         self.debug_mode = debug
         self.epicycles = None
-        self.debug_font = pygame.freetype.SysFont(
-            "consolas, inconsolate, monospace",
-            16
-        )
-        self.debug_font.pad = True
-        self.debug_font.fgcolor = [(255 - c) % 256 for c in constants.BACKGROUND_COLOR[:3]]
-        self.debug_line_spacing = pygame.Vector2(
-            0, self.debug_font.get_sized_height()
-        )
-        self.debug_margin = pygame.Vector2(5, 5)
+
+    def start(self, filename="", n=0, fade=False,
+              scale=constants.DEFAULT_SCALE_FACTOR, reverse=False):
+        super().start()
+        target_surface_rect = self.target_surface.get_rect()
+        points = []
+        if filename:
+            with open(filename, "r") as file:
+                for line in file:
+                    x, y = line.split()
+                    # Flip the image by negating y because in pygame y=0
+                    # is at the top.
+                    points.append(pygame.Vector2(float(x), -float(y)))
+            points = transform.scale(
+                *transform.center(points),
+                scale,
+                target_surface_rect
+            )
+        else:
+            points = self.scene_manager.persistent_scene_data.get("points")
+
+        if points is not None:
+            self.epicycles = epicycles.Epicycles(
+                points=points,
+                n=n,
+                fade=fade,
+                reverse=reverse,
+                surface_center=target_surface_rect.center,
+                debug=self.debug_mode
+            )
 
     def process_event(self, event):
         done = super().process_event(event)
@@ -45,8 +65,8 @@ class Circles(scene.Scene):
                 self.epicycles.erase_line()
             elif event.key == pygame.K_f:
                 self.epicycles.fade = not self.epicycles.fade
-            elif event.key == pygame.K_F1:
-                self.debug_mode = not self.debug_mode
+            elif event.key == pygame.K_RETURN:
+                self.close("draw")
 
     def update(self, dt):
         if not self.paused:
@@ -85,29 +105,3 @@ class Circles(scene.Scene):
                 self.debug_margin + self.debug_line_spacing * 4,
                 f"number of points: {len(self.epicycles.points)}"
             )
-
-    def start(self, filename="", points=None, n=0, fade=False,
-              scale=constants.DEFAULT_SCALE_FACTOR, reverse=False):
-        target_surface_rect = self.target_surface.get_rect()
-        if filename:
-            with open(filename, "r") as file:
-                points = []
-                for line in file:
-                    x, y = line.split()
-                    # Flip the image by negating y because in pygame y=0
-                    # is at the top.
-                    points.append(pygame.Vector2(float(x), -float(y)))
-            points = transform.scale(
-                *transform.center(points),
-                scale,
-                target_surface_rect
-            )
-
-        self.epicycles = epicycles.Epicycles(
-            points=points,
-            n=n,
-            fade=fade,
-            reverse=reverse,
-            surface_center=target_surface_rect.center,
-            debug=self.debug_mode
-        )
