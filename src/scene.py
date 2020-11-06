@@ -38,7 +38,9 @@ class Scene:
         pass
 
     def start(self):
-        self.debug_mode = self.scene_manager.persistent_scene_data["debug_mode"]
+        self.debug_mode = self.scene_manager.persistent_scene_data.get(
+            "debug_mode", self.debug_mode
+        )
 
     def close(self, next_scene_name=""):
         self.scene_manager.persistent_scene_data["debug_mode"] = self.debug_mode
