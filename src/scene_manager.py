@@ -41,8 +41,8 @@ class SceneManager:
             self.active_scene.draw()
             pygame.display.flip()
 
-    def change_scenes(self, next_scene_name):
-        if next_scene_name == "":
+    def change_scenes(self, next_scene_name=""):
+        if not next_scene_name:
             self.running = False
             return
         self.active_scene = self.scenes[next_scene_name]
