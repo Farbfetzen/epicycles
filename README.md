@@ -1,5 +1,9 @@
 ## Drawing shapes with epicycles.
 
+![heart](heart.png)
+![closed hilbert curve](hilbert.png)
+
+
 Requires Python >= 3.6, PyGame 2 and NumPy.
  
 To run the app you can provide a path to a text file containing the points of the desired shape:
