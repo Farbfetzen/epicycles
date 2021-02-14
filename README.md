@@ -1,4 +1,4 @@
-## Drawing shapes with epicycles.
+## Drawing shapes with epicycles
 
 ![heart](heart.png)
 ![closed hilbert curve](hilbert.png)
