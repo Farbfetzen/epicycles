@@ -2,3 +2,5 @@ screenshots/
 *.mp4
 *.webm
 .Rproj.user
+.venv/
+__pycache__/
