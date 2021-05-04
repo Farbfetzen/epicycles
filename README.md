@@ -1,6 +1,6 @@
 ## Drawing shapes with epicycles
 
-This app lets you draw any 2d shape using a combination of circles with different radii and rotation speeds.  For more info see this [Video by The Coding Train](https://www.youtube.com/watch?v=qS4H6PEcCCA) or this [Video by Mathologer](https://www.youtube.com/watch?v=MY4luNgGfms).
+This app lets you draw any 2d shape using a combination of circles with different radii and rotation speeds.  For more info see [this Video by The Coding Train](https://www.youtube.com/watch?v=qS4H6PEcCCA) or [this Video by Mathologer](https://www.youtube.com/watch?v=MY4luNgGfms).
 
 ![heart](readme_visuals/heart.png)  
 ![closed hilbert curve](readme_visuals/hilbert.png)
@@ -12,7 +12,7 @@ To run the app you can provide a path to a text file containing the points of th
 ```
 python epicycles.py shapes/heart.txt
 ```
-If you run it without a file path then the app will go into "draw" mode. All other arguments will be ignored in this case. There you you can draw a shape with the mouse. Then hit enter to watch the circles go.
+If you run it without a file path then the app will go into "draw" mode. There you you can draw a shape with the mouse. Then hit enter to watch the circles go.
 
 
 ### Controls
