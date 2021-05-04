@@ -1,6 +1,6 @@
 ## Drawing shapes with epicycles
 
-This app lets you draw any 2d shape using a combination of circles with different radii and rotation speeds.  For more info see [this Video by The Coding Train](https://www.youtube.com/watch?v=qS4H6PEcCCA) or [this Video by Mathologer](https://www.youtube.com/watch?v=MY4luNgGfms).
+This app lets you draw any 2d shape using a combination of circles with different radii and rotation speeds.  For more info see [this Video by The Coding Train](https://www.youtube.com/watch?v=MY4luNgGfms) or [this Video by Mathologer](https://www.youtube.com/watch?v=qS4H6PEcCCA).
 
 ![heart](readme_visuals/heart.png)  
 ![closed hilbert curve](readme_visuals/hilbert.png)
