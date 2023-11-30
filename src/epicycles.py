@@ -40,13 +40,13 @@ class Epicycles:
             print(f"{len(self.circle_radii)=}")
 
     def update(self, dt):
-        self.current_angle = self.current_angle + self.angular_velocity * dt
+        self.current_angle += self.angular_velocity * dt
         previous_point = self.points[-1]
         next_point = self.get_point_at_angle(self.current_angle)
         dist_sq = previous_point.distance_squared_to(next_point)
         if dist_sq < constants.MIN_DISTANCE_SQ:
             return
-        elif dist_sq > constants.MAX_DISTANCE_SQ:
+        if dist_sq > constants.MAX_DISTANCE_SQ:
             interpolated_points, interpolated_angles = self.interpolate(
                 previous_point,
                 next_point,
